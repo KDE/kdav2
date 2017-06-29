@@ -31,11 +31,7 @@ set(libkdav2_SRCS
  common/davjob.cpp
 
  protocols/groupdavprotocol.cpp
-
- #KContacts
  protocols/carddavprotocol.cpp
-
- #KCalCore
  protocols/caldavprotocol.cpp
 )
 
