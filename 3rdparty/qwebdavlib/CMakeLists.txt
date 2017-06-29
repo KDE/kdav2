@@ -14,5 +14,6 @@ PUBLIC
 )
 install(TARGETS
     kdav2_webdavlib
+    EXPORT KPimKDAV2Targets
     ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 )
