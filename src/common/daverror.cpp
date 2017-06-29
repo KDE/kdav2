@@ -18,10 +18,7 @@
 
 #include "daverror.h"
 
-#include <KIO/Global>
-#include <KIO/Job>
-
-using namespace KDAV;
+using namespace KDAV2;
 
 Error::Error()
     : mErrorNumber(NO_ERR)
@@ -61,14 +58,10 @@ int Error::responseCode() const
     return mResponseCode;
 }
 
-QString KDAV::Error::translatedJobError() const
+QString KDAV2::Error::translatedJobError() const
 {
     QString err;
-    if (mJobErrorCode > 0 && mJobErrorCode != KIO::ERR_SLAVE_DEFINED) {
-        err = KIO::buildErrorString(mJobErrorCode, mErrorText);
-    } else {
         err = mErrorText;
-    }
     return err;
 }
 

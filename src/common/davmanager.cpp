@@ -21,20 +21,25 @@
 #include "protocols/caldavprotocol.h"
 #include "protocols/carddavprotocol.h"
 #include "protocols/groupdavprotocol.h"
+#include "davjob.h"
+#include "qwebdavlib/qwebdav.h"
 
-#include <KIO/DavJob>
-
-#include "libkdav_debug.h"
+#include "libkdav2_debug.h"
 
 #include <QtCore/QUrl>
 #include <QtXml/QDomDocument>
 
-using namespace KDAV;
+using namespace KDAV2;
 
 DavManager *DavManager::mSelf = nullptr;
 
 DavManager::DavManager()
+    : mIgnoreSslErrors(true)
 {
+    mWebDav = new QWebdav;
+    QObject::connect(mWebDav, &QWebdav::errorChanged, [=] (const QString &error) {
+        qWarning() << "Got error " << error;
+    });
 }
 
 DavManager::~DavManager()
@@ -44,6 +49,7 @@ DavManager::~DavManager()
         it.next();
         delete it.value();
     }
+    delete mWebDav;
 }
 
 DavManager *DavManager::self()
@@ -55,42 +61,62 @@ DavManager *DavManager::self()
     return mSelf;
 }
 
-KIO::DavJob *DavManager::createPropFindJob(const QUrl &url, const QDomDocument &document, const QString &depth) const
+void DavManager::setConnectionSettings(const QUrl &url)
 {
-    KIO::DavJob *job = KIO::davPropFind(url, document, depth, KIO::HideProgressInfo | KIO::DefaultFlags);
-
-    // workaround needed, Depth: header doesn't seem to be correctly added
-    const QString header = QLatin1String("Content-Type: text/xml\r\nDepth: ") + depth;
-    job->addMetaData(QStringLiteral("customHTTPHeader"), header);
-    job->addMetaData(QStringLiteral("cookies"), QStringLiteral("none"));
-    job->addMetaData(QStringLiteral("no-auth-prompt"), QStringLiteral("true"));
-    job->setProperty("extraDavDepth", QVariant::fromValue(depth));
-
-    return job;
+    mWebDav->setConnectionSettings(url.scheme() == "https" ? QWebdav::HTTPS : QWebdav::HTTP, url.host(), "/", url.userName(), url.password(), url.port(0), mIgnoreSslErrors);
 }
 
-KIO::DavJob *DavManager::createReportJob(const QUrl &url, const QDomDocument &document, const QString &depth) const
+DavJob *DavManager::createPropFindJob(const QUrl &url, const QDomDocument &document, const QString &depth)
 {
-    KIO::DavJob *job = KIO::davReport(url, document.toString(), depth, KIO::HideProgressInfo | KIO::DefaultFlags);
-
-    // workaround needed, Depth: header doesn't seem to be correctly added
-    const QString header = QLatin1String("Content-Type: text/xml\r\nDepth: ") + depth;
-    job->addMetaData(QStringLiteral("customHTTPHeader"), header);
-    job->addMetaData(QStringLiteral("cookies"), QStringLiteral("none"));
-    job->addMetaData(QStringLiteral("no-auth-prompt"), QStringLiteral("true"));
-    job->setProperty("extraDavDepth", QVariant::fromValue(depth));
-
-    return job;
+    setConnectionSettings(url);
+    auto reply = mWebDav->propfind(url.path(), document.toByteArray(), depth.toInt());
+    return new DavJob{reply, url};
 }
 
-KIO::DavJob *DavManager::createPropPatchJob(const QUrl &url, const QDomDocument &document) const
+DavJob *DavManager::createReportJob(const QUrl &url, const QDomDocument &document, const QString &depth)
 {
-    KIO::DavJob *job = KIO::davPropPatch(url, document, KIO::HideProgressInfo | KIO::DefaultFlags);
-    const QString header = QStringLiteral("Content-Type: text/xml");
-    job->addMetaData(QStringLiteral("customHTTPHeader"), header);
-    job->addMetaData(QStringLiteral("cookies"), QStringLiteral("none"));
-    job->addMetaData(QStringLiteral("no-auth-prompt"), QStringLiteral("true"));
-    return job;
+    setConnectionSettings(url);
+    auto reply = mWebDav->report(url.path(), document.toByteArray(), depth.toInt());
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createDeleteJob(const QUrl &url)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->remove(url.path());
+    return new DavJob{reply, url};
+}
+
+
+DavJob *DavManager::createGetJob(const QUrl &url)
+{
+    setConnectionSettings(url);
+    // Work around a strange bug in Zimbra (seen at least on CE 5.0.18) : if the user-agent
+    // contains "Mozilla", some strange debug data is displayed in the shared calendars.
+    // This kinda mess up the events parsing...
+    auto reply = mWebDav->get(url.path(), {{"User-Agent", "KDAV2"}});
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createPropPatchJob(const QUrl &url, const QDomDocument &document)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->proppatch(url.path(), document.toByteArray());
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createCreateJob(const QByteArray &data, const QUrl &url, const QByteArray &contentType)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->put(url.path(), data, {{"Content-Type", contentType}, {"If-None-Match", "*"}});
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createModifyJob(const QByteArray &data, const QUrl &url, const QByteArray &contentType, const QByteArray &etag)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->put(url.path(), data, {{"Content-Type", contentType}, {"If-Match", etag}});
+    return new DavJob{reply, url};
 }
 
 const DavProtocolBase *DavManager::davProtocol(Protocol protocol)
@@ -109,19 +135,30 @@ bool DavManager::createProtocol(Protocol protocol)
     }
 
     switch (protocol) {
-    case KDAV::CalDav:
-        mProtocols.insert(KDAV::CalDav, new CaldavProtocol());
+    case KDAV2::CalDav:
+        mProtocols.insert(KDAV2::CalDav, new CaldavProtocol());
         break;
-    case KDAV::CardDav:
-        mProtocols.insert(KDAV::CardDav, new CarddavProtocol());
+    case KDAV2::CardDav:
+        mProtocols.insert(KDAV2::CardDav, new CarddavProtocol());
         break;
-    case KDAV::GroupDav:
-        mProtocols.insert(KDAV::GroupDav, new GroupdavProtocol());
+    case KDAV2::GroupDav:
+        mProtocols.insert(KDAV2::GroupDav, new GroupdavProtocol());
         break;
     default:
-        qCCritical(KDAV_LOG) << "Unknown protocol: " << static_cast<int>(protocol);
+        qCCritical(KDAV2_LOG) << "Unknown protocol: " << static_cast<int>(protocol);
         return false;
     }
 
     return true;
 }
+
+QNetworkAccessManager *DavManager::networkAccessManager()
+{
+    return DavManager::self()->mWebDav;
+}
+
+void DavManager::setIgnoreSslErrors(bool ignore)
+{
+    mIgnoreSslErrors = ignore;
+}
+

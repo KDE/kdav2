@@ -23,16 +23,15 @@
 #include "davprotocolbase.h"
 #include "utils.h"
 #include "daverror.h"
+#include "davjob.h"
 
-#include "libkdav_debug.h"
-#include <KIO/DavJob>
-#include <KIO/Job>
+#include "libkdav2_debug.h"
 
 #include <QColor>
 #include <QtCore/QBuffer>
 #include <QtXmlPatterns/QXmlQuery>
 
-using namespace KDAV;
+using namespace KDAV2;
 
 DavCollectionsFetchJob::DavCollectionsFetchJob(const DavUrl &url, QObject *parent)
     : DavJobBase(parent), mUrl(url), mSubJobCount(0)
@@ -66,9 +65,8 @@ void DavCollectionsFetchJob::doCollectionsFetch(const QUrl &url)
 
     const QDomDocument collectionQuery = DavManager::self()->davProtocol(mUrl.protocol())->collectionsQuery()->buildQuery();
 
-    KIO::DavJob *job = DavManager::self()->createPropFindJob(url, collectionQuery);
-    connect(job, &KIO::DavJob::result, this, &DavCollectionsFetchJob::collectionsFetchFinished);
-    job->addMetaData(QStringLiteral("PropagateHttpHeader"), QStringLiteral("true"));
+    auto job = DavManager::self()->createPropFindJob(url, collectionQuery);
+    connect(job, &DavJob::result, this, &DavCollectionsFetchJob::collectionsFetchFinished);
 }
 
 void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
@@ -79,7 +77,7 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
         if (davJob->latestResponseCode()) {
             // If we have a HTTP response code then this may mean that
             // the URL was not a principal URL. Retry as if it were a calendar URL.
-            qCDebug(KDAV_LOG) << job->errorText();
+            qCDebug(KDAV2_LOG) << job->errorText();
             doCollectionsFetch(mUrl.url());
         } else {
             // Just give up here.
@@ -92,8 +90,8 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
     }
 
     const QStringList homeSets = davJob->homeSets();
-    qCDebug(KDAV_LOG) << "Found " << homeSets.size() << " homesets";
-    qCDebug(KDAV_LOG) << homeSets;
+    qCDebug(KDAV2_LOG) << "Found " << homeSets.size() << " homesets";
+    qCDebug(KDAV2_LOG) << homeSets;
 
     if (homeSets.isEmpty()) {
         // Same as above, retry as if it were a calendar URL.
@@ -121,13 +119,10 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
 
 void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
 {
-    KIO::DavJob *davJob = qobject_cast<KIO::DavJob *>(job);
-    const int responseCode = davJob->queryMetaData(QStringLiteral("responsecode")).isEmpty() ?
-                             0 :
-                             davJob->queryMetaData(QStringLiteral("responsecode")).toInt();
+    auto davJob = qobject_cast<DavJob *>(job);
+    const int responseCode = davJob->responseCode();
 
-    // KIO::DavJob does not set error() even if the HTTP status code is a 4xx or a 5xx
-    if (davJob->error() || (responseCode >= 400 && responseCode < 600)) {
+    if (davJob->error()) {
         if (davJob->url() != mUrl.url()) {
             // Retry as if the initial URL was a calendar URL.
             // We can end up here when retrieving a homeset on
@@ -150,7 +145,7 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
 
         // Validate that we got a valid PROPFIND response
         QDomElement rootElement = davJob->response().documentElement();
-        if (rootElement.tagName().compare(QStringLiteral("multistatus"), Qt::CaseInsensitive) != 0) {
+        if (rootElement.localName().compare(QStringLiteral("multistatus"), Qt::CaseInsensitive) != 0) {
             setError(ERR_COLLECTIONFETCH);
             setErrorTextFromDavError();
             subjobFinished();
@@ -229,7 +224,6 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
 
             QDomElement responseElement = Utils::firstChildElementNS(responsesElement, QStringLiteral("DAV:"), QStringLiteral("response"));
             while (!responseElement.isNull()) {
-
                 QDomElement propstatElement;
 
                 // check for the valid propstat, without giving up on first error
@@ -321,13 +315,13 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
                 const QDomElement currentPrivsElement = Utils::firstChildElementNS(propElement, QStringLiteral("DAV:"), QStringLiteral("current-user-privilege-set"));
                 if (currentPrivsElement.isNull()) {
                     // Assume that we have all privileges
-                    collection.setPrivileges(KDAV::All);
+                    collection.setPrivileges(KDAV2::All);
                 } else {
                     Privileges privileges = Utils::extractPrivileges(currentPrivsElement);
                     collection.setPrivileges(privileges);
                 }
 
-                qCDebug(KDAV_LOG) << url.toDisplayString() << "PRIVS: " << collection.privileges();
+                qCDebug(KDAV2_LOG) << url.toDisplayString() << "PRIVS: " << collection.privileges();
                 mCollections << collection;
                 Q_EMIT collectionDiscovered(mUrl.protocol(), url.toDisplayString(), jobUrl);
 

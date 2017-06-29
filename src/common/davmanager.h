@@ -16,28 +16,27 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef KDAV_DAVMANAGER_H
-#define KDAV_DAVMANAGER_H
+#ifndef KDAV2_DAVMANAGER_H
+#define KDAV2_DAVMANAGER_H
 
-#include "kpimkdav_export.h"
+#include "kpimkdav2_export.h"
 
 #include "enums.h"
 
 #include <QtCore/QMap>
 #include <QtCore/QString>
 
-namespace KIO
-{
-class DavJob;
-}
 
 class QUrl;
 
 class QDomDocument;
+class QWebdav;
+class QNetworkAccessManager;
 
-namespace KDAV
+namespace KDAV2
 {
 
+class DavJob;
 class DavProtocolBase;
 
 /**
@@ -47,7 +46,7 @@ class DavProtocolBase;
  * low-level DAV jobs and has access to the global DAV protocol dialect
  * objects which abstract the access to the various DAV protocol dialects.
  */
-class KPIMKDAV_EXPORT DavManager
+class KPIMKDAV2_EXPORT DavManager
 {
 public:
     /**
@@ -67,7 +66,40 @@ public:
      * @param document The query XML document.
      * @param depth The Depth: value to send in the HTTP request
      */
-    KIO::DavJob *createPropFindJob(const QUrl &url, const QDomDocument &document, const QString &depth = QStringLiteral("1")) const;
+    DavJob *createPropFindJob(const QUrl &url, const QDomDocument &document, const QString &depth = QStringLiteral("1"));
+
+    /**
+     * Returns a preconfigured DAV GET job.
+     *
+     * @param url The target url of the job.
+     */
+    DavJob *createGetJob(const QUrl &url);
+
+    /**
+     * Returns a preconfigured DAV DELETE job.
+     *
+     * @param url The target url of the job.
+     */
+    DavJob *createDeleteJob(const QUrl &url);
+
+    /**
+     * Returns a preconfigured DAV PUT job with a If-None-Match header.
+     *
+     * @param data The data to PUT.
+     * @param url The target url of the job.
+     * @param contentType The content-type.
+     */
+    DavJob *createCreateJob(const QByteArray &data, const QUrl &url, const QByteArray &contentType);
+
+    /**
+     * Returns a preconfigured DAV PUT job with a If-Match header, that matches the @param etag.
+     *
+     * @param data The data to PUT.
+     * @param url The target url of the job.
+     * @param contentType The content-type.
+     * @param etag The etag of the entity to modify.
+     */
+    DavJob *createModifyJob(const QByteArray &data, const QUrl &url, const QByteArray &contentType, const QByteArray &etag);
 
     /**
      * Returns a preconfigured DAV REPORT job.
@@ -76,7 +108,7 @@ public:
      * @param document The query XML document.
      * @param depth The Depth: value to send in the HTTP request
      */
-    KIO::DavJob *createReportJob(const QUrl &url, const QDomDocument &document, const QString &depth = QStringLiteral("1")) const;
+    DavJob *createReportJob(const QUrl &url, const QDomDocument &document, const QString &depth = QStringLiteral("1"));
 
     /**
      * Returns a preconfigured DAV PROPPATCH job.
@@ -84,18 +116,34 @@ public:
      * @param url The target url of the job.
      * @param document The query XML document.
      */
-    KIO::DavJob *createPropPatchJob(const QUrl &url, const QDomDocument &document) const;
+    DavJob *createPropPatchJob(const QUrl &url, const QDomDocument &document);
 
     /**
      * Returns the DAV protocol dialect object for the given DAV @p protocol.
      */
     const DavProtocolBase *davProtocol(Protocol protocol);
 
+    /**
+     * Provides access to the internally used network access manager.
+     */
+    static QNetworkAccessManager *networkAccessManager();
+
+    /**
+     * Ignore all ssl errors.
+     * 
+     * If you want to handle ssl errors yourself via the networkAccessManager, then set to false.
+     * 
+     * Enabled by default.
+     */
+    void setIgnoreSslErrors(bool);
+
 private:
     /**
      * Creates a new DAV manager.
      */
     DavManager();
+
+    void setConnectionSettings(const QUrl &url);
 
     /**
      * Creates a new protocol.
@@ -105,6 +153,8 @@ private:
     typedef QMap<Protocol, DavProtocolBase *> protocolsMap;
     protocolsMap mProtocols;
     static DavManager *mSelf;
+    QWebdav *mWebDav;
+    bool mIgnoreSslErrors;
 };
 
 }
