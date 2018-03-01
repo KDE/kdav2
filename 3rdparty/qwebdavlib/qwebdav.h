@@ -54,7 +54,7 @@
 #include <QtCore>
 #include <QtNetwork>
 
-#include "qwebdav_global.h"
+#include "qwebdavshared_export.h"
 
 /**
  * @brief Main class used to handle the webdav protocol
