@@ -12,6 +12,9 @@ PUBLIC
     Qt5::Xml
     Qt5::Network
 )
+
+generate_export_header(kdav2_webdavlib BASE_NAME qwebdavshared)
+
 install(TARGETS
     kdav2_webdavlib
     EXPORT KPimKDAV2Targets
