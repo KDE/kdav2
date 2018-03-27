@@ -77,7 +77,7 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
         if (davJob->latestResponseCode()) {
             // If we have a HTTP response code then this may mean that
             // the URL was not a principal URL. Retry as if it were a calendar URL.
-            qCDebug(KDAV2_LOG) << job->errorText();
+            qCDebug(KDAV2_LOG) << "Principal fetch failed, retrying: " << job->errorText();
             doCollectionsFetch(mUrl.url());
         } else {
             // Just give up here.
