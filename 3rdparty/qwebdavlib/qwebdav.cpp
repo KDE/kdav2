@@ -228,12 +228,9 @@ void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authent
 #endif
 
     if (reply == m_authenticator_lastReply) {
-        reply->abort();
-        emit errorChanged("WebDAV server requires authentication. Check WebDAV share settings!");
-        reply->deleteLater();
-        reply=0;
+        //Avoid endless retries. This will fail with AuthenticationRequiredError
+        return;
     }
-
     m_authenticator_lastReply = reply;
 
     authenticator->setUser(m_username);
