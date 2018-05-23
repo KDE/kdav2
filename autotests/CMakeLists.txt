@@ -30,3 +30,15 @@ ecm_add_test(davitemslistjobtest.cpp fakeserver.cpp
     NAME_PREFIX "kdav2-"
     LINK_LIBRARIES KPim::KDAV2 Qt5::Test Qt5::Core Qt5::Network
 )
+
+ecm_add_test(davcollectionfetchjobtest.cpp
+    TEST_NAME davcollectionfetchjob
+    NAME_PREFIX "kdav2-"
+    LINK_LIBRARIES KPim::KDAV2 Qt5::Test Qt5::Core Qt5::Network Qt5::Gui
+)
+
+ecm_add_test(davcollectioncreatejobtest.cpp
+    TEST_NAME davcollectioncreatejob
+    NAME_PREFIX "kdav2-"
+    LINK_LIBRARIES KPim::KDAV2 Qt5::Test Qt5::Core Qt5::Network Qt5::Gui
+)

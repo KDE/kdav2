@@ -119,6 +119,27 @@ DavJob *DavManager::createModifyJob(const QByteArray &data, const QUrl &url, con
     return new DavJob{reply, url};
 }
 
+DavJob *DavManager::createMkColJob(const QUrl &url)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->mkdir(url.path());
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createMkColJob(const QUrl &url, const QDomDocument &document)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->mkdir(url.path(), document.toByteArray());
+    return new DavJob{reply, url};
+}
+
+DavJob *DavManager::createMkCalendarJob(const QUrl &url, const QDomDocument &document)
+{
+    setConnectionSettings(url);
+    auto reply = mWebDav->mkcalendar(url.path(), document.toByteArray());
+    return new DavJob{reply, url};
+}
+
 const DavProtocolBase *DavManager::davProtocol(Protocol protocol)
 {
     if (createProtocol(protocol)) {

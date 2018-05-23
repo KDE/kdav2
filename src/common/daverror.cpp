@@ -128,6 +128,10 @@ QString Error::errorText() const
         }
         break;
         }
+    case ERR_COLLECTIONCREATE: {
+        result = QStringLiteral("There was an error when creating the collection");
+        break;
+        }
     case ERR_ITEMCREATE: {
         result = QStringLiteral("There was a problem with the request. The item has not been created on the server.\n"
                       "%1 (%2).").arg(err).arg(mResponseCode);

@@ -8,7 +8,9 @@ include_directories(
 set(libkdav2_SRCS
  common/davjobbase.cpp
  common/davcollection.cpp
+ common/davcollectioncreatejob.cpp
  common/davcollectiondeletejob.cpp
+ common/davcollectionfetchjob.cpp
  common/davcollectionsfetchjob.cpp
  common/davcollectionmodifyjob.cpp
  common/davcollectionsmultifetchjob.cpp
@@ -40,7 +42,9 @@ ecm_generate_headers(KDAV2_Camelcase_HEADERS
     HEADER_NAMES
     DavJobBase
     DavCollection
+    DavCollectionCreateJob
     DavCollectionDeleteJob
+    DavCollectionFetchJob
     DavCollectionsFetchJob
     DavCollectionModifyJob
     DavCollectionsMultiFetchJob

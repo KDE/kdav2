@@ -102,6 +102,9 @@ public:
     QNetworkReply* put(const QString& path, const QByteArray& data, const QMap<QByteArray, QByteArray> &headers);
 
     QNetworkReply* mkdir(const QString& dir );
+    // The extended MKCOL used in CardDAV
+    QNetworkReply* mkdir(const QString& dir, const QByteArray& query);
+    QNetworkReply* mkcalendar(const QString& dir, const QByteArray& query);
     QNetworkReply* copy(const QString& pathFrom, const QString& pathTo, bool overwrite = false);
     QNetworkReply* move(const QString& pathFrom, const QString& pathTo, bool overwrite = false);
     QNetworkReply* remove(const QString& path );
@@ -126,8 +129,8 @@ protected Q_SLOTS:
     void sslErrors(QNetworkReply *reply,const QList<QSslError> &errors);
 
 protected:
-    QNetworkReply* createRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData = 0 );
-    QNetworkReply* createRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData);
+    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData = 0 );
+    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData);
 
     //! creates the absolute path from m_rootPath and relPath
     QString absolutePath(const QString &relPath);

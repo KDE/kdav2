@@ -222,48 +222,16 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
 
             const QDomElement responsesElement = document.documentElement();
 
-            QDomElement responseElement = Utils::firstChildElementNS(responsesElement, QStringLiteral("DAV:"), QStringLiteral("response"));
+            QDomElement responseElement = Utils::firstChildElementNS(
+                responsesElement, QStringLiteral("DAV:"), QStringLiteral("response"));
             while (!responseElement.isNull()) {
-                QDomElement propstatElement;
 
-                // check for the valid propstat, without giving up on first error
-                {
-                    const QDomNodeList propstats = responseElement.elementsByTagNameNS(QStringLiteral("DAV:"), QStringLiteral("propstat"));
-                    for (int i = 0; i < propstats.length(); ++i) {
-                        const QDomElement propstatCandidate = propstats.item(i).toElement();
-                        const QDomElement statusElement = Utils::firstChildElementNS(propstatCandidate, QStringLiteral("DAV:"), QStringLiteral("status"));
-                        if (statusElement.text().contains(QStringLiteral("200"))) {
-                            propstatElement = propstatCandidate;
-                        }
-                    }
-                }
-
-                if (propstatElement.isNull()) {
-                    responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
+                DavCollection collection;
+                if (!Utils::extractCollection(responseElement, mUrl, collection)) {
                     continue;
                 }
 
-                // extract url
-                const QDomElement hrefElement = Utils::firstChildElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("href"));
-                if (hrefElement.isNull()) {
-                    responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
-                    continue;
-                }
-
-                QString href = hrefElement.text();
-                if (!href.endsWith(QLatin1Char('/'))) {
-                    href.append(QLatin1Char('/'));
-                }
-
-                QUrl url = davJob->url();
-                url.setUserInfo(QString());
-                if (href.startsWith(QLatin1Char('/'))) {
-                    // href is only a path, use request url to complete
-                    url.setPath(href, QUrl::TolerantMode);
-                } else {
-                    // href is a complete url
-                    url = QUrl::fromUserInput(href);
-                }
+                QUrl url = collection.url().url();
 
                 // don't add this resource if it has already been detected
                 bool alreadySeen = false;
@@ -273,59 +241,16 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
                     }
                 }
                 if (alreadySeen) {
-                    responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
+                    responseElement = Utils::nextSiblingElementNS(
+                        responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
                     continue;
                 }
 
-                // extract display name
-                const QDomElement propElement = Utils::firstChildElementNS(propstatElement, QStringLiteral("DAV:"), QStringLiteral("prop"));
-                const QDomElement displaynameElement = Utils::firstChildElementNS(propElement, QStringLiteral("DAV:"), QStringLiteral("displayname"));
-                const QString displayName = displaynameElement.text();
-
-                // Extract CTag
-                const QDomElement CTagElement = Utils::firstChildElementNS(propElement, QStringLiteral("http://calendarserver.org/ns/"), QStringLiteral("getctag"));
-                QString CTag;
-                if (!CTagElement.isNull()) {
-                    CTag = CTagElement.text();
-                }
-
-                // extract calendar color if provided
-                const QDomElement colorElement = Utils::firstChildElementNS(propElement, QStringLiteral("http://apple.com/ns/ical/"), QStringLiteral("calendar-color"));
-                QColor color;
-                if (!colorElement.isNull()) {
-                    QString colorValue = colorElement.text();
-                    if (QColor::isValidColor(colorValue)) {
-                        color.setNamedColor(colorValue);
-                    }
-                }
-
-                // extract allowed content types
-                const DavCollection::ContentTypes contentTypes = DavManager::self()->davProtocol(mUrl.protocol())->collectionContentTypes(propstatElement);
-
-                auto _url = url;
-                _url.setUserInfo(mUrl.url().userInfo());
-                DavCollection collection(DavUrl(_url, mUrl.protocol()), displayName, contentTypes);
-
-                collection.setCTag(CTag);
-                if (color.isValid()) {
-                    collection.setColor(color);
-                }
-
-                // extract privileges
-                const QDomElement currentPrivsElement = Utils::firstChildElementNS(propElement, QStringLiteral("DAV:"), QStringLiteral("current-user-privilege-set"));
-                if (currentPrivsElement.isNull()) {
-                    // Assume that we have all privileges
-                    collection.setPrivileges(KDAV2::All);
-                } else {
-                    Privileges privileges = Utils::extractPrivileges(currentPrivsElement);
-                    collection.setPrivileges(privileges);
-                }
-
-                qCDebug(KDAV2_LOG) << url.toDisplayString() << "PRIVS: " << collection.privileges();
                 mCollections << collection;
                 Q_EMIT collectionDiscovered(mUrl.protocol(), url.toDisplayString(), jobUrl);
 
-                responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
+                responseElement = Utils::nextSiblingElementNS(
+                    responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
             }
         }
     }

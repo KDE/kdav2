@@ -21,6 +21,7 @@
 
 #include "kpimkdav2_export.h"
 
+#include "davcollection.h"
 #include "enums.h"
 
 #include <QtCore/QUrl>
@@ -75,6 +76,13 @@ QString KPIMKDAV2_EXPORT createUniqueId();
  * Returns the mimetype that shall be used for contact DAV resources using @p protocol.
  */
 QString KPIMKDAV2_EXPORT contactsMimeType(Protocol protocol);
+
+/**
+ * Extract a DavCollection from the response element of a PROPFIND result.
+ *
+ * @return false if a collection could not be extracted.
+ */
+bool extractCollection(const QDomElement &response, DavUrl url, DavCollection &collection);
 }
 
 }

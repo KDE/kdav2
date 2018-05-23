@@ -258,7 +258,7 @@ QString QWebdav::absolutePath(const QString &relPath)
 
 }
 
-QNetworkReply* QWebdav::createRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData)
+QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData)
 {
     if(outgoingData != 0 && outgoingData->size() !=0) {
         req.setHeader(QNetworkRequest::ContentLengthHeader, outgoingData->size());
@@ -266,7 +266,7 @@ QNetworkReply* QWebdav::createRequest(const QString& method, QNetworkRequest& re
     }
 
 #ifdef DEBUG_WEBDAV
-    qDebug() << " QWebdav::createRequest1";
+    qDebug() << " QWebdav::createDAVRequest1";
     qDebug() << "   " << method << " " << req.url().toString();
     QList<QByteArray> rawHeaderList = req.rawHeaderList();
     QByteArray rawHeaderItem;
@@ -278,14 +278,14 @@ QNetworkReply* QWebdav::createRequest(const QString& method, QNetworkRequest& re
     return sendCustomRequest(req, method.toLatin1(), outgoingData);
 }
 
-QNetworkReply* QWebdav::createRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData )
+QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData )
 {
     QBuffer* dataIO = new QBuffer;
     dataIO->setData(outgoingData);
     dataIO->open(QIODevice::ReadOnly);
 
 #ifdef DEBUG_WEBDAV
-    qDebug() << " QWebdav::createRequest2";
+    qDebug() << " QWebdav::createDAVRequest2";
     qDebug() << "   " << method << " " << req.url().toString();
     QList<QByteArray> rawHeaderList = req.rawHeaderList();
     QByteArray rawHeaderItem;
@@ -294,7 +294,7 @@ QNetworkReply* QWebdav::createRequest(const QString& method, QNetworkRequest& re
     }
 #endif
 
-    QNetworkReply* reply = createRequest(method, req, dataIO);
+    QNetworkReply* reply = createDAVRequest(method, req, dataIO);
     m_outDataDevices.insert(reply, dataIO);
     return reply;
 }
@@ -355,7 +355,7 @@ QNetworkReply* QWebdav::search(const QString& path, const QString& q )
 
     req.setUrl(reqUrl);
 
-    return this->createRequest("SEARCH", req, query);
+    return this->createDAVRequest("SEARCH", req, query);
 }
 
 QNetworkReply* QWebdav::get(const QString& path, const QMap<QByteArray, QByteArray> &headers)
@@ -477,7 +477,7 @@ QNetworkReply* QWebdav::propfind(const QString& path, const QByteArray& query, i
     req.setUrl(reqUrl);
     req.setRawHeader("Depth", depth == 2 ? QString("infinity").toUtf8() : QString::number(depth).toUtf8());
 
-    return createRequest("PROPFIND", req, query);
+    return createDAVRequest("PROPFIND", req, query);
 }
 
 QNetworkReply* QWebdav::report(const QString& path, const QByteArray& query, int depth)
@@ -490,7 +490,7 @@ QNetworkReply* QWebdav::report(const QString& path, const QByteArray& query, int
     req.setUrl(reqUrl);
     req.setRawHeader("Depth", depth == 2 ? QString("infinity").toUtf8() : QString::number(depth).toUtf8());
 
-    return createRequest("REPORT", req, query);
+    return createDAVRequest("REPORT", req, query);
 }
 
 QNetworkReply* QWebdav::proppatch(const QString& path, const QWebdav::PropValues& props)
@@ -531,7 +531,7 @@ QNetworkReply* QWebdav::proppatch(const QString& path, const QByteArray& query)
 
     req.setUrl(reqUrl);
 
-    return createRequest("PROPPATCH", req, query);
+    return createDAVRequest("PROPPATCH", req, query);
 }
 
 QNetworkReply* QWebdav::mkdir (const QString& path)
@@ -543,7 +543,31 @@ QNetworkReply* QWebdav::mkdir (const QString& path)
 
     req.setUrl(reqUrl);
 
-    return createRequest("MKCOL", req);
+    return createDAVRequest("MKCOL", req);
+}
+
+QNetworkReply* QWebdav::mkdir (const QString& path, const QByteArray& query)
+{
+    QNetworkRequest req;
+
+    QUrl reqUrl(m_baseUrl);
+    reqUrl.setPath(absolutePath(path));
+
+    req.setUrl(reqUrl);
+
+    return createDAVRequest("MKCOL", req, query);
+}
+
+QNetworkReply* QWebdav::mkcalendar (const QString& path, const QByteArray& query)
+{
+    QNetworkRequest req;
+
+    QUrl reqUrl(m_baseUrl);
+    reqUrl.setPath(absolutePath(path));
+
+    req.setUrl(reqUrl);
+
+    return createDAVRequest("MKCALENDAR", req, query);
 }
 
 QNetworkReply* QWebdav::copy(const QString& pathFrom, const QString& pathTo, bool overwrite)
@@ -567,7 +591,7 @@ QNetworkReply* QWebdav::copy(const QString& pathFrom, const QString& pathTo, boo
     req.setRawHeader("Depth", "infinity");
     req.setRawHeader("Overwrite", overwrite ? "T" : "F");
 
-    return createRequest("COPY", req);
+    return createDAVRequest("COPY", req);
 }
 
 QNetworkReply* QWebdav::move(const QString& pathFrom, const QString& pathTo, bool overwrite)
@@ -591,7 +615,7 @@ QNetworkReply* QWebdav::move(const QString& pathFrom, const QString& pathTo, boo
     req.setRawHeader("Depth", "infinity");
     req.setRawHeader("Overwrite", overwrite ? "T" : "F");
 
-    return createRequest("MOVE", req);
+    return createDAVRequest("MOVE", req);
 }
 
 QNetworkReply* QWebdav::remove(const QString& path)
@@ -603,5 +627,5 @@ QNetworkReply* QWebdav::remove(const QString& path)
 
     req.setUrl(reqUrl);
 
-    return createRequest("DELETE", req);
+    return createDAVRequest("DELETE", req);
 }

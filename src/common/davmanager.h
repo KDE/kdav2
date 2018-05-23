@@ -119,6 +119,29 @@ public:
     DavJob *createPropPatchJob(const QUrl &url, const QDomDocument &document);
 
     /**
+     * Returns a preconfigured DAV MKCOL job.
+     *
+     * @param url The url to MKCOL (may be empty).
+     */
+    DavJob *createMkColJob(const QUrl &url);
+
+    /**
+     * Returns a preconfigured extended CardDAV MKCOL job.
+     *
+     * @param url The url to MKCOL (may be empty).
+     * @param document The query of the extended MKCOL request
+     */
+    DavJob *createMkColJob(const QUrl &url, const QDomDocument &document);
+
+    /**
+     * Returns a preconfigured DAV MKCALENDAR job.
+     *
+     * @param url The url of the new calendar
+     * @param document The query of the MKCALENDAR request
+     */
+    DavJob *createMkCalendarJob(const QUrl &url, const QDomDocument &document);
+
+    /**
      * Returns the DAV protocol dialect object for the given DAV @p protocol.
      */
     const DavProtocolBase *davProtocol(Protocol protocol);
@@ -130,9 +153,9 @@ public:
 
     /**
      * Ignore all ssl errors.
-     * 
+     *
      * If you want to handle ssl errors yourself via the networkAccessManager, then set to false.
-     * 
+     *
      * Enabled by default.
      */
     void setIgnoreSslErrors(bool);

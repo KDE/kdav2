@@ -23,7 +23,9 @@
 #include "davitem.h"
 #include "davmanager.h"
 #include "davprotocolbase.h"
+#include "davurl.h"
 
+#include <QColor>
 #include <QtCore/QByteArray>
 #include <QtCore/QDateTime>
 #include <QtCore/QString>
@@ -178,4 +180,111 @@ QString Utils::contactsMimeType(Protocol protocol)
     }
 
     return ret;
+}
+
+bool Utils::extractCollection(const QDomElement &response, DavUrl davUrl, DavCollection &collection)
+{
+    QDomElement propstatElement;
+
+    // check for the valid propstat, without giving up on first error
+    {
+        const QDomNodeList propstats =
+            response.elementsByTagNameNS(QStringLiteral("DAV:"), QStringLiteral("propstat"));
+        for (int i = 0; i < propstats.length(); ++i) {
+            const QDomElement propstatCandidate = propstats.item(i).toElement();
+            const QDomElement statusElement     = Utils::firstChildElementNS(
+                propstatCandidate, QStringLiteral("DAV:"), QStringLiteral("status"));
+            if (statusElement.text().contains(QStringLiteral("200"))) {
+                propstatElement = propstatCandidate;
+            }
+        }
+    }
+
+    if (propstatElement.isNull()) {
+        return false;
+    }
+
+    // extract url
+    const QDomElement hrefElement =
+        Utils::firstChildElementNS(response, QStringLiteral("DAV:"), QStringLiteral("href"));
+
+    if (hrefElement.isNull()) {
+        return false;
+    }
+
+
+    QString href = hrefElement.text();
+    if (!href.endsWith(QLatin1Char('/'))) {
+        href.append(QLatin1Char('/'));
+    }
+
+    QUrl url = davUrl.url();
+    url.setUserInfo(QString());
+    if (href.startsWith(QLatin1Char('/'))) {
+        // href is only a path, use request url to complete
+        url.setPath(href, QUrl::TolerantMode);
+    } else {
+        // href is a complete url
+        url = QUrl::fromUserInput(href);
+    }
+
+    // extract display name
+    const QDomElement propElement =
+        Utils::firstChildElementNS(propstatElement, QStringLiteral("DAV:"), QStringLiteral("prop"));
+    const QDomElement displaynameElement =
+        Utils::firstChildElementNS(propElement, QStringLiteral("DAV:"), QStringLiteral("displayname"));
+    const QString displayName = displaynameElement.text();
+
+    // Extract CTag
+    const QDomElement CTagElement = Utils::firstChildElementNS(
+        propElement, QStringLiteral("http://calendarserver.org/ns/"), QStringLiteral("getctag"));
+    QString CTag;
+    if (!CTagElement.isNull()) {
+        CTag = CTagElement.text();
+    }
+
+    // extract calendar color if provided
+    const QDomElement colorElement = Utils::firstChildElementNS(
+        propElement, QStringLiteral("http://apple.com/ns/ical/"), QStringLiteral("calendar-color"));
+    QColor color;
+    if (!colorElement.isNull()) {
+        QString colorValue = colorElement.text();
+        if(colorValue[0] == '#' && colorValue.size() == 9) {
+            // Put the alpha part at the beginning for Qt:
+            // Qt wants #AARRGGBB instead of #RRGGBBAA
+            colorValue = QStringLiteral("#") + colorValue.right(2) + colorValue.mid(1, 6);
+        }
+
+        if (QColor::isValidColor(colorValue)) {
+            color.setNamedColor(colorValue);
+        }
+    }
+
+    // extract allowed content types
+    const DavCollection::ContentTypes contentTypes =
+        DavManager::self()->davProtocol(davUrl.protocol())->collectionContentTypes(propstatElement);
+
+    auto _url = url;
+    _url.setUserInfo(davUrl.url().userInfo());
+    collection = DavCollection(DavUrl(_url, davUrl.protocol()), displayName, contentTypes);
+
+    collection.setCTag(CTag);
+    if (color.isValid()) {
+        collection.setColor(color);
+    }
+
+    // extract privileges
+    const QDomElement currentPrivsElement = Utils::firstChildElementNS(
+        propElement, QStringLiteral("DAV:"), QStringLiteral("current-user-privilege-set"));
+    if (currentPrivsElement.isNull()) {
+        // Assume that we have all privileges
+        collection.setPrivileges(KDAV2::All);
+    } else {
+        Privileges privileges = Utils::extractPrivileges(currentPrivsElement);
+        collection.setPrivileges(privileges);
+    }
+
+    qCDebug(KDAV2_LOG) << url.toDisplayString() << "PRIVS: " << collection.privileges();
+
+    return true;
 }
