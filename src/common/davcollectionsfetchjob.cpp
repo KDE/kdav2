@@ -27,7 +27,6 @@
 
 #include "libkdav2_debug.h"
 
-#include <QColor>
 #include <QtCore/QBuffer>
 #include <QtXmlPatterns/QXmlQuery>
 
