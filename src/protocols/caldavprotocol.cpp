@@ -298,6 +298,11 @@ bool CaldavProtocol::supportsPrincipals() const
     return true;
 }
 
+bool CaldavProtocol::supportsCTags() const
+{
+    return true;
+}
+
 bool CaldavProtocol::useReport() const
 {
     return true;

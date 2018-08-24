@@ -76,9 +76,11 @@ Q_SIGNALS:
 private Q_SLOTS:
     void principalFetchFinished(KJob *);
     void collectionsFetchFinished(KJob *);
+    void individualCollectionRefreshed(KJob *);
 
 private:
     void doCollectionsFetch(const QUrl &url);
+    void refreshIndividualCollection(const DavCollection &);
     void subjobFinished();
 
     DavUrl mUrl;

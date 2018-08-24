@@ -26,6 +26,7 @@ class CarddavProtocol : public KDAV2::DavMultigetProtocol
 public:
     CarddavProtocol();
     bool supportsPrincipals() const Q_DECL_OVERRIDE;
+    bool supportsCTags() const Q_DECL_OVERRIDE;
     bool useReport() const Q_DECL_OVERRIDE;
     bool useMultiget() const Q_DECL_OVERRIDE;
     QString principalHomeSet() const Q_DECL_OVERRIDE;

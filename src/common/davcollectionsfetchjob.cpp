@@ -20,6 +20,7 @@
 
 #include "davmanager.h"
 #include "davprincipalhomesetsfetchjob.h"
+#include "davcollectionfetchjob.h"
 #include "davprotocolbase.h"
 #include "utils.h"
 #include "daverror.h"
@@ -142,6 +143,8 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
         _jobUrl.setUserInfo(QString());
         const QString jobUrl = _jobUrl.toDisplayString();
 
+        qCDebug(KDAV2_LOG).noquote() << davJob->response().toString();
+
         // Validate that we got a valid PROPFIND response
         QDomElement rootElement = davJob->response().documentElement();
         if (rootElement.localName().compare(QStringLiteral("multistatus"), Qt::CaseInsensitive) != 0) {
@@ -245,6 +248,18 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
                     continue;
                 }
 
+                bool protocolSupportsCTags = DavManager::self()->davProtocol(mUrl.protocol())->supportsCTags();
+                if (protocolSupportsCTags && collection.CTag() == "") {
+                    qCDebug(KDAV2_LOG) << "No CTag found for"
+                        << collection.url().url().toDisplayString()
+                        << "from the home set, trying from the direct URL";
+                    refreshIndividualCollection(collection);
+
+                    responseElement = Utils::nextSiblingElementNS(
+                        responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
+                    continue;
+                }
+
                 mCollections << collection;
                 Q_EMIT collectionDiscovered(mUrl.protocol(), url.toDisplayString(), jobUrl);
 
@@ -254,6 +269,47 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
         }
     }
 
+    subjobFinished();
+}
+
+// This is a workaroud for Google who doesn't support providing the CTag
+// directly from the home set. We refresh the collections individually from
+// their own URLs, but only if we haven't found a CTag with the home set
+// request.
+void DavCollectionsFetchJob::refreshIndividualCollection(const DavCollection &collection)
+{
+    ++mSubJobCount;
+    auto individualFetchJob = new DavCollectionFetchJob(collection, this);
+    connect(individualFetchJob, &DavCollectionFetchJob::result, this, &DavCollectionsFetchJob::individualCollectionRefreshed);
+    individualFetchJob->start();
+}
+
+void DavCollectionsFetchJob::individualCollectionRefreshed(KJob *job)
+{
+    const auto *davJob = qobject_cast<DavCollectionFetchJob *>(job);
+
+    if (davJob->error()) {
+        if (davJob->latestResponseCode()) {
+            // If we have a HTTP response code then this may mean that
+            // the URL was not a principal URL. Retry as if it were a calendar URL.
+            qCDebug(KDAV2_LOG) << "Individual fetch failed, retrying: " << job->errorText();
+            doCollectionsFetch(mUrl.url());
+        } else {
+            setDavError(davJob->davError());
+            setErrorTextFromDavError();
+            emitResult();
+        }
+        return;
+    }
+
+    qCDebug(KDAV2_LOG) << "Collection"
+        << davJob->collection().url().url().toDisplayString() << "refreshed";
+
+    if (davJob->collection().CTag() == "") {
+        qWarning() << "Collection with an empty CTag";
+    }
+
+    mCollections << davJob->collection();
     subjobFinished();
 }
 

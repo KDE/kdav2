@@ -83,8 +83,6 @@ void DavCollectionFetchJob::davJobFinished(KJob *job)
 
         const QDomDocument document       = storedJob->response();
 
-        //qWarning() << document.toString();
-
         const QDomElement documentElement = document.documentElement();
         QDomElement responseElement       = Utils::firstChildElementNS(
             documentElement, QStringLiteral("DAV:"), QStringLiteral("response"));

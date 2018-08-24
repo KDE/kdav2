@@ -26,6 +26,7 @@ class GroupdavProtocol : public KDAV2::DavProtocolBase
 public:
     GroupdavProtocol();
     bool supportsPrincipals() const Q_DECL_OVERRIDE;
+    bool supportsCTags() const Q_DECL_OVERRIDE;
     bool useReport() const Q_DECL_OVERRIDE;
     bool useMultiget() const Q_DECL_OVERRIDE;
     KDAV2::XMLQueryBuilder::Ptr collectionsQuery() const Q_DECL_OVERRIDE;

@@ -80,6 +80,13 @@ public:
     virtual bool supportsPrincipals() const = 0;
 
     /**
+     * Return whether the dav protocol dialect supports CTags.
+     *
+     * If true, it must fetch them in the collectionsQuery().
+     */
+    virtual bool supportsCTags() const = 0;
+
+    /**
      * Returns whether the dav protocol dialect supports the REPORT
      * command to query all resources of a collection.
      * If not, PROPFIND command will be used instead.

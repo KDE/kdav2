@@ -85,6 +85,11 @@ bool GroupdavProtocol::supportsPrincipals() const
     return false;
 }
 
+bool GroupdavProtocol::supportsCTags() const
+{
+    return false;
+}
+
 bool GroupdavProtocol::useReport() const
 {
     return false;

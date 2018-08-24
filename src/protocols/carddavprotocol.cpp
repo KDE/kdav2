@@ -126,6 +126,11 @@ bool CarddavProtocol::supportsPrincipals() const
     return true;
 }
 
+bool CarddavProtocol::supportsCTags() const
+{
+    return true;
+}
+
 bool CarddavProtocol::useReport() const
 {
     return false;
