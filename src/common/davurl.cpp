@@ -19,6 +19,7 @@
 #include "davurl.h"
 
 #include "enums.h"
+#include <QDebug>
 
 using namespace KDAV2;
 
@@ -78,4 +79,10 @@ QDataStream &KDAV2::operator>>(QDataStream &stream, DavUrl &davUrl)
     davUrl = DavUrl(url, (Protocol) p.toInt());
 
     return stream;
+}
+
+QDebug &KDAV2::operator<<(QDebug &debug, const DavUrl &url)
+{
+    debug << url.toDisplayString();
+    return debug;
 }

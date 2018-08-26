@@ -85,6 +85,7 @@ private:
 
 KPIMKDAV2_EXPORT QDataStream &operator<<(QDataStream &out, const DavUrl &url);
 KPIMKDAV2_EXPORT QDataStream &operator>>(QDataStream &in, DavUrl &url);
+KPIMKDAV2_EXPORT QDebug &operator<<(QDebug &out, const DavUrl &url);
 
 }
 
