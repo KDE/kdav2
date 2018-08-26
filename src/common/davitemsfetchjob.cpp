@@ -43,6 +43,13 @@ void DavItemsFetchJob::start()
         return;
     }
 
+    if (mUrls.isEmpty()) {
+        setError(ERR_PROBLEM_WITH_REQUEST);
+        setErrorText("DavItemsFetchJob without urls.");
+        emitResult();
+        return;
+    }
+
     const QDomDocument report = protocol->itemsReportQuery(mUrls)->buildQuery();
     DavJob *job = DavManager::self()->createReportJob(mCollectionUrl.url(), report, QStringLiteral("0"));
     connect(job, &DavJob::result, this, &DavItemsFetchJob::davJobFinished);
