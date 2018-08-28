@@ -56,63 +56,65 @@ public:
     }
 };
 
+static QDomDocument listQuery(const QString &typeFilter, const QString startTime, const QString &endTime)
+{
+    QDomDocument document;
+
+    QDomElement queryElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("calendar-query"));
+    document.appendChild(queryElement);
+
+    QDomElement propElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("prop"));
+    queryElement.appendChild(propElement);
+
+    QDomElement getetagElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("getetag"));
+    propElement.appendChild(getetagElement);
+
+    QDomElement getRTypeElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("resourcetype"));
+    propElement.appendChild(getRTypeElement);
+
+    QDomElement filterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("filter"));
+    queryElement.appendChild(filterElement);
+
+    QDomElement compfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
+
+    QDomAttr nameAttribute = document.createAttribute(QStringLiteral("name"));
+    nameAttribute.setValue(QStringLiteral("VCALENDAR"));
+    compfilterElement.setAttributeNode(nameAttribute);
+    filterElement.appendChild(compfilterElement);
+
+    QDomElement subcompfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
+    nameAttribute = document.createAttribute(QStringLiteral("name"));
+    nameAttribute.setValue(typeFilter);
+    subcompfilterElement.setAttributeNode(nameAttribute);
+
+    if (!startTime.isEmpty() || !endTime.isEmpty()) {
+        QDomElement timeRangeElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("time-range"));
+
+        if (!startTime.isEmpty()) {
+            QDomAttr startAttribute = document.createAttribute(QStringLiteral("start"));
+            startAttribute.setValue(startTime);
+            timeRangeElement.setAttributeNode(startAttribute);
+        }
+
+        if (!endTime.isEmpty()) {
+            QDomAttr endAttribute = document.createAttribute(QStringLiteral("end"));
+            endAttribute.setValue(endTime);
+            timeRangeElement.setAttributeNode(endAttribute);
+        }
+
+        subcompfilterElement.appendChild(timeRangeElement);
+    }
+    compfilterElement.appendChild(subcompfilterElement);
+
+    return document;
+}
+
 class CaldavListEventQueryBuilder : public XMLQueryBuilder
 {
 public:
     QDomDocument buildQuery() const Q_DECL_OVERRIDE
     {
-        QString startTime = parameter(QStringLiteral("start")).toString();
-        QString endTime = parameter(QStringLiteral("end")).toString();
-        QDomDocument document;
-
-        QDomElement queryElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("calendar-query"));
-        document.appendChild(queryElement);
-
-        QDomElement propElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("prop"));
-        queryElement.appendChild(propElement);
-
-        QDomElement getetagElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("getetag"));
-        propElement.appendChild(getetagElement);
-
-        QDomElement getRTypeElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("resourcetype"));
-        propElement.appendChild(getRTypeElement);
-
-        QDomElement filterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("filter"));
-        queryElement.appendChild(filterElement);
-
-        QDomElement compfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-
-        QDomAttr nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VCALENDAR"));
-        compfilterElement.setAttributeNode(nameAttribute);
-        filterElement.appendChild(compfilterElement);
-
-        QDomElement subcompfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-        nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VEVENT"));
-        subcompfilterElement.setAttributeNode(nameAttribute);
-
-        if (!startTime.isEmpty() || !endTime.isEmpty()) {
-            QDomElement timeRangeElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("time-range"));
-
-            if (!startTime.isEmpty()) {
-                QDomAttr startAttribute = document.createAttribute(QStringLiteral("start"));
-                startAttribute.setValue(startTime);
-                timeRangeElement.setAttributeNode(startAttribute);
-            }
-
-            if (!endTime.isEmpty()) {
-                QDomAttr endAttribute = document.createAttribute(QStringLiteral("end"));
-                endAttribute.setValue(endTime);
-                timeRangeElement.setAttributeNode(endAttribute);
-            }
-
-            subcompfilterElement.appendChild(timeRangeElement);
-        }
-
-        compfilterElement.appendChild(subcompfilterElement);
-
-        return document;
+        return listQuery(QLatin1String{"VEVENT"}, parameter(QStringLiteral("start")).toString(), parameter(QStringLiteral("end")).toString());
     }
 
     QString mimeType() const Q_DECL_OVERRIDE
@@ -126,58 +128,7 @@ class CaldavListTodoQueryBuilder : public XMLQueryBuilder
 public:
     QDomDocument buildQuery() const Q_DECL_OVERRIDE
     {
-        QString startTime = parameter(QStringLiteral("start")).toString();
-        QString endTime = parameter(QStringLiteral("end")).toString();
-        QDomDocument document;
-
-        QDomElement queryElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("calendar-query"));
-        document.appendChild(queryElement);
-
-        QDomElement propElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("prop"));
-        queryElement.appendChild(propElement);
-
-        QDomElement getetagElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("getetag"));
-        propElement.appendChild(getetagElement);
-
-        QDomElement getRTypeElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("resourcetype"));
-        propElement.appendChild(getRTypeElement);
-
-        QDomElement filterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("filter"));
-        queryElement.appendChild(filterElement);
-
-        QDomElement compfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-
-        QDomAttr nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VCALENDAR"));
-        compfilterElement.setAttributeNode(nameAttribute);
-        filterElement.appendChild(compfilterElement);
-
-        QDomElement subcompfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-        nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VTODO"));
-        subcompfilterElement.setAttributeNode(nameAttribute);
-
-        if (!startTime.isEmpty() || !endTime.isEmpty()) {
-            QDomElement timeRangeElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("time-range"));
-
-            if (!startTime.isEmpty()) {
-                QDomAttr startAttribute = document.createAttribute(QStringLiteral("start"));
-                startAttribute.setValue(startTime);
-                timeRangeElement.setAttributeNode(startAttribute);
-            }
-
-            if (!endTime.isEmpty()) {
-                QDomAttr endAttribute = document.createAttribute(QStringLiteral("end"));
-                endAttribute.setValue(endTime);
-                timeRangeElement.setAttributeNode(endAttribute);
-            }
-
-            subcompfilterElement.appendChild(timeRangeElement);
-        }
-
-        compfilterElement.appendChild(subcompfilterElement);
-
-        return document;
+        return listQuery(QLatin1String{"VTODO"}, parameter(QStringLiteral("start")).toString(), parameter(QStringLiteral("end")).toString());
     }
 
     QString mimeType() const Q_DECL_OVERRIDE
@@ -191,58 +142,7 @@ class CaldavListJournalQueryBuilder : public XMLQueryBuilder
 public:
     QDomDocument buildQuery() const Q_DECL_OVERRIDE
     {
-        QString startTime = parameter(QStringLiteral("start")).toString();
-        QString endTime = parameter(QStringLiteral("end")).toString();
-        QDomDocument document;
-
-        QDomElement queryElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("calendar-query"));
-        document.appendChild(queryElement);
-
-        QDomElement propElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("prop"));
-        queryElement.appendChild(propElement);
-
-        QDomElement getetagElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("getetag"));
-        propElement.appendChild(getetagElement);
-
-        QDomElement getRTypeElement = document.createElementNS(QStringLiteral("DAV:"), QStringLiteral("resourcetype"));
-        propElement.appendChild(getRTypeElement);
-
-        QDomElement filterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("filter"));
-        queryElement.appendChild(filterElement);
-
-        QDomElement compfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-
-        QDomAttr nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VCALENDAR"));
-        compfilterElement.setAttributeNode(nameAttribute);
-        filterElement.appendChild(compfilterElement);
-
-        QDomElement subcompfilterElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("comp-filter"));
-        nameAttribute = document.createAttribute(QStringLiteral("name"));
-        nameAttribute.setValue(QStringLiteral("VJOURNAL"));
-        subcompfilterElement.setAttributeNode(nameAttribute);
-
-        if (!startTime.isEmpty() || !endTime.isEmpty()) {
-            QDomElement timeRangeElement = document.createElementNS(QStringLiteral("urn:ietf:params:xml:ns:caldav"), QStringLiteral("time-range"));
-
-            if (!startTime.isEmpty()) {
-                QDomAttr startAttribute = document.createAttribute(QStringLiteral("start"));
-                startAttribute.setValue(startTime);
-                timeRangeElement.setAttributeNode(startAttribute);
-            }
-
-            if (!endTime.isEmpty()) {
-                QDomAttr endAttribute = document.createAttribute(QStringLiteral("end"));
-                endAttribute.setValue(endTime);
-                timeRangeElement.setAttributeNode(endAttribute);
-            }
-
-            subcompfilterElement.appendChild(timeRangeElement);
-        }
-
-        compfilterElement.appendChild(subcompfilterElement);
-
-        return document;
+        return listQuery(QLatin1String{"VJOURNAL"}, parameter(QStringLiteral("start")).toString(), parameter(QStringLiteral("end")).toString());
     }
 
     QString mimeType() const Q_DECL_OVERRIDE
