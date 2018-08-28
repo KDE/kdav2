@@ -117,7 +117,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.akonadi.calendar.event");
+        return QStringLiteral("application/x-vnd.kdav2.calendar.event");
     }
 };
 
@@ -182,7 +182,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.akonadi.calendar.todo");
+        return QStringLiteral("application/x-vnd.kdav2.calendar.todo");
     }
 };
 
@@ -247,7 +247,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.akonadi.calendar.journal");
+        return QStringLiteral("application/x-vnd.kdav2.calendar.journal");
     }
 };
 
