@@ -119,7 +119,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.kdav2.calendar.event");
+        return QStringLiteral("VEVENT");
     }
 };
 
@@ -133,7 +133,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.kdav2.calendar.todo");
+        return QStringLiteral("VTODO");
     }
 };
 
@@ -147,7 +147,7 @@ public:
 
     QString mimeType() const Q_DECL_OVERRIDE
     {
-        return QStringLiteral("application/x-vnd.kdav2.calendar.journal");
+        return QStringLiteral("VJOURNAL");
     }
 };
 
