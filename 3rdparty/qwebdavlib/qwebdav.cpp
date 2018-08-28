@@ -248,7 +248,7 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
         req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml; charset=utf-8");
     }
 
-    qDebug() << " QWebdav::createDAVRequest1";
+    qDebug() << " QWebdav::createDAVRequest";
     qDebug() << "   " << method << " " << req.url().toString();
     QList<QByteArray> rawHeaderList = req.rawHeaderList();
     QByteArray rawHeaderItem;
@@ -264,14 +264,6 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
     QBuffer* dataIO = new QBuffer;
     dataIO->setData(outgoingData);
     dataIO->open(QIODevice::ReadOnly);
-
-    qDebug() << " QWebdav::createDAVRequest2";
-    qDebug() << "   " << method << " " << req.url().toString();
-    QList<QByteArray> rawHeaderList = req.rawHeaderList();
-    QByteArray rawHeaderItem;
-    foreach(rawHeaderItem, rawHeaderList) {
-        qDebug() << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
-    }
 
     QNetworkReply* reply = createDAVRequest(method, req, dataIO);
     m_outDataDevices.insert(reply, dataIO);
