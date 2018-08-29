@@ -19,6 +19,7 @@
 #include "davjob.h"
 
 #include "daverror.h"
+#include "libkdav2_debug.h"
 
 using namespace KDAV2;
 
@@ -55,13 +56,13 @@ DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
         d->data.append(reply->readAll());
     });
     QObject::connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), [=] (QNetworkReply::NetworkError error) {
-        qWarning() << "Error " << error << reply->errorString();
+        qCWarning(KDAV2_LOG) << "Error " << error << reply->errorString();
     });
     QObject::connect(reply, &QNetworkReply::redirected, [=] (const QUrl &url) {
-        qWarning() << "Redirected: " << url;
+        qCWarning(KDAV2_LOG) << "Redirected: " << url;
     });
     QObject::connect(reply, &QNetworkReply::metaDataChanged, [=] () {
-        // qWarning() << "Metadata changed: " << reply->rawHeaderPairs();
+        qCDebug(KDAV2_LOG) << "Metadata changed: " << reply->rawHeaderPairs();
         d->location = reply->rawHeader("Location");
         d->etag = reply->rawHeader("ETag");
         //"text/x-vcard; charset=utf-8" -> "text/x-vcard"
