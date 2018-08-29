@@ -23,7 +23,6 @@
 #include "davprotocolbase.h"
 #include "davurl.h"
 #include "utils.h"
-#include "etagcache.h"
 #include "davjob.h"
 
 #include <QtCore/QBuffer>
@@ -33,31 +32,27 @@ using namespace KDAV2;
 
 class DavItemsListJobPrivate {
 public:
-    DavItemsListJobPrivate(const DavUrl &url, std::shared_ptr<EtagCache> cache);
+    DavItemsListJobPrivate(const DavUrl &url);
 
     DavUrl mUrl;
-    std::shared_ptr<EtagCache> mEtagCache;
     QStringList mMimeTypes;
     QString mRangeStart;
     QString mRangeEnd;
     DavItem::List mItems;
     QSet<QString> mSeenUrls; // to prevent events duplication with some servers
-    DavItem::List mChangedItems;
-    QStringList mDeletedItems;
     uint mSubJobCount;
 };
 
-DavItemsListJobPrivate::DavItemsListJobPrivate(const DavUrl &url, std::shared_ptr<EtagCache> cache)
+DavItemsListJobPrivate::DavItemsListJobPrivate(const DavUrl &url)
     : mUrl(url)
-    , mEtagCache(cache)
     , mSubJobCount(0)
 {
 }
 
 
-DavItemsListJob::DavItemsListJob(const DavUrl &url, std::shared_ptr<EtagCache> cache, QObject *parent)
+DavItemsListJob::DavItemsListJob(const DavUrl &url, QObject *parent)
     : DavJobBase(parent)
-    , d(std::unique_ptr<DavItemsListJobPrivate>(new DavItemsListJobPrivate(url, cache)))
+    , d(std::unique_ptr<DavItemsListJobPrivate>(new DavItemsListJobPrivate(url)))
 {
 }
 
@@ -120,16 +115,6 @@ void DavItemsListJob::start()
 DavItem::List DavItemsListJob::items() const
 {
     return d->mItems;
-}
-
-DavItem::List DavItemsListJob::changedItems() const
-{
-    return d->mChangedItems;
-}
-
-QStringList DavItemsListJob::deletedItems() const
-{
-    return d->mDeletedItems;
 }
 
 void DavItemsListJob::davJobFinished(KJob *job)
@@ -243,17 +228,9 @@ void DavItemsListJob::davJobFinished(KJob *job)
 
             d->mItems << item;
 
-            if (d->mEtagCache->etagChanged(itemUrl, item.etag())) {
-                d->mChangedItems << item;
-            }
-
             responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));
         }
     }
-
-    QSet<QString> removed = d->mEtagCache->urls().toSet();
-    removed.subtract(d->mSeenUrls);
-    d->mDeletedItems = removed.toList();
 
     if (--d->mSubJobCount == 0) {
         emitResult();

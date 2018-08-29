@@ -29,7 +29,6 @@ set(libkdav2_SRCS
  common/davprincipalsearchjob.cpp
  common/davurl.cpp
  common/utils.cpp
- common/etagcache.cpp
  common/davjob.cpp
 
  protocols/groupdavprotocol.cpp
@@ -63,7 +62,6 @@ ecm_generate_headers(KDAV2_Camelcase_HEADERS
     DavUrl
     Utils
     Enums
-    EtagCache
     REQUIRED_HEADERS KDAV2_HEADERS
     PREFIX KDAV2
     RELATIVE common

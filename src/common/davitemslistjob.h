@@ -34,7 +34,6 @@ class DavItemsListJobPrivate;
 namespace KDAV2
 {
 
-class EtagCache;
 class DavUrl;
 
 /**
@@ -51,7 +50,7 @@ public:
      * @param url The url of the DAV collection.
      * @param parent The parent object.
      */
-    DavItemsListJob(const DavUrl &url, std::shared_ptr<EtagCache> cache, QObject *parent = nullptr);
+    DavItemsListJob(const DavUrl &url, QObject *parent = nullptr);
 
     ~DavItemsListJob();
 
@@ -81,17 +80,6 @@ public:
      * Returns the list of items seen including identifier url and etag information.
      */
     DavItem::List items() const;
-
-    /**
-     * Returns the list of items that were changed on the server.
-     */
-    DavItem::List changedItems() const;
-
-    /**
-     * Returns the list of items URLs that were not seen in the backend.
-     * As this is based on the etag cache this may contain dependent items.
-     */
-    QStringList deletedItems() const;
 
 private Q_SLOTS:
     void davJobFinished(KJob *);

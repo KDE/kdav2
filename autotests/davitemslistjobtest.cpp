@@ -21,18 +21,15 @@
 
 #include <KDAV2/DavItemsListJob>
 #include <KDAV2/DavUrl>
-#include <KDAV2/EtagCache>
 
 #include <QTest>
 
 void DavItemsListJobTest::noMatchingMimetype()
 {
-    std::shared_ptr<KDAV2::EtagCache> cache(new KDAV2::EtagCache());
-
     QUrl url(QStringLiteral("http://localhost/collection"));
     KDAV2::DavUrl davUrl(url, KDAV2::CardDav);
 
-    auto job = new KDAV2::DavItemsListJob(davUrl, cache);
+    auto job = new KDAV2::DavItemsListJob(davUrl);
     job->setContentMimeTypes(QStringList() << QStringLiteral("mime/invalid1") << QStringLiteral("mime/invalid2"));
     job->exec();
 
