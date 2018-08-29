@@ -50,6 +50,10 @@
 
 #include "qwebdav.h"
 
+#include <QDebug>
+
+Q_LOGGING_CATEGORY(KDAV2_LOG, "org.kde.pim.kdav2.webdav")
+
 QWebdav::QWebdav (QObject *parent) : QNetworkAccessManager(parent)
   ,m_rootPath()
   ,m_username()
@@ -163,7 +167,7 @@ void QWebdav::replyReadyRead()
 
 void QWebdav::replyFinished(QNetworkReply* reply)
 {
-    qDebug() << "QWebdav::replyFinished() " << reply->rawHeaderList();
+    qCDebug(KDAV2_LOG) << "QWebdav::replyFinished() " << reply->rawHeaderList();
 
     disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
     disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
@@ -182,7 +186,7 @@ void QWebdav::replyFinished(QNetworkReply* reply)
 
 void QWebdav::replyDeleteLater(QNetworkReply* reply)
 {
-    qDebug() << "QWebdav::replyDeleteLater()";
+    qCDebug(KDAV2_LOG) << "QWebdav::replyDeleteLater()";
 
     QIODevice *outDataDevice = m_outDataDevices.value(reply, 0);
     if (outDataDevice!=0)
@@ -196,7 +200,7 @@ void QWebdav::replyError(QNetworkReply::NetworkError)
     if (reply==0)
         return;
 
-    qWarning() << "QWebdav::replyError()  reply->url() == " << reply->url().toString(QUrl::RemoveUserInfo);
+    qCWarning(KDAV2_LOG) << "QWebdav::replyError()  reply->url() == " << reply->url().toString(QUrl::RemoveUserInfo);
 
     if ( reply->error() == QNetworkReply::OperationCanceledError) {
         QIODevice* dataIO = m_inDataDevices.value(reply, 0);
@@ -213,7 +217,7 @@ void QWebdav::replyError(QNetworkReply::NetworkError)
 void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authenticator)
 {
     QVariantHash opts = authenticator->options();
-    qDebug() << "QWebdav::authenticationRequired()  option == " << opts;
+    qCDebug(KDAV2_LOG) << "QWebdav::authenticationRequired()  option == " << opts;
 
     if (reply == m_authenticator_lastReply) {
         //Avoid endless retries. This will fail with AuthenticationRequiredError
@@ -227,7 +231,7 @@ void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authent
 
 void QWebdav::sslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 {
-    qDebug() << "QWebdav::sslErrors()   reply->url == " << reply->url().toString(QUrl::RemoveUserInfo);
+    qCDebug(KDAV2_LOG) << "QWebdav::sslErrors()   reply->url == " << reply->url().toString(QUrl::RemoveUserInfo);
 
     if (m_ignoreSslErrors) {
         // user accepted this SSL certifcate already ==> ignore SSL errors
@@ -248,12 +252,12 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
         req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml; charset=utf-8");
     }
 
-    qDebug() << " QWebdav::createDAVRequest";
-    qDebug() << "   " << method << " " << req.url().toString();
+    qCDebug(KDAV2_LOG) << " QWebdav::createDAVRequest";
+    qCDebug(KDAV2_LOG) << "   " << method << " " << req.url().toString();
     QList<QByteArray> rawHeaderList = req.rawHeaderList();
     QByteArray rawHeaderItem;
     foreach(rawHeaderItem, rawHeaderList) {
-        qDebug() << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
+        qCDebug(KDAV2_LOG) << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
     }
 
     return sendCustomRequest(req, method.toLatin1(), outgoingData);
@@ -272,7 +276,7 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
 
 QNetworkReply* QWebdav::list(const QString& path)
 {
-    qDebug() << "QWebdav::list() path = " << path;
+    qCDebug(KDAV2_LOG) << "QWebdav::list() path = " << path;
     return list(path, 1);
 }
 
@@ -338,7 +342,7 @@ QNetworkReply* QWebdav::get(const QString& path, const QMap<QByteArray, QByteArr
         req.setRawHeader(it.key(), it.value());
     }
 
-    qDebug() << "QWebdav::get() url = " << req.url().toString(QUrl::RemoveUserInfo);
+    qCDebug(KDAV2_LOG) << "QWebdav::get() url = " << req.url().toString(QUrl::RemoveUserInfo);
 
     req.setUrl(reqUrl);
 
@@ -359,7 +363,7 @@ QNetworkReply* QWebdav::get(const QString& path, QIODevice* data, quint64 fromRa
 
     req.setUrl(reqUrl);
 
-    qDebug() << "QWebdav::get() url = " << req.url().toString(QUrl::RemoveUserInfo);
+    qCDebug(KDAV2_LOG) << "QWebdav::get() url = " << req.url().toString(QUrl::RemoveUserInfo);
 
     if (fromRangeInBytes>0) {
         // RFC2616 http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
@@ -384,7 +388,7 @@ QNetworkReply* QWebdav::put(const QString& path, QIODevice* data)
 
     req.setUrl(reqUrl);
 
-    qDebug() << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
+    qCDebug(KDAV2_LOG) << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
 
     return QNetworkAccessManager::put(req, data);
 }
@@ -401,7 +405,7 @@ QNetworkReply* QWebdav::put(const QString& path, const QByteArray& data, const Q
         req.setRawHeader(it.key(), it.value());
     }
 
-    qDebug() << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
+    qCDebug(KDAV2_LOG) << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
 
     return QNetworkAccessManager::put(req, data);
 }
