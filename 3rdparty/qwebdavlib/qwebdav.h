@@ -66,7 +66,7 @@ class QWEBDAVSHARED_EXPORT QWebdav : public QNetworkAccessManager
 public:
     enum QWebdavConnectionType {HTTP = 1, HTTPS};
 
-    QWebdav(QObject* parent = 0);
+    QWebdav(QObject* parent = nullptr);
     ~QWebdav();
 
     typedef QMap<QString, QMap < QString, QVariant > > PropValues;
@@ -129,7 +129,7 @@ protected Q_SLOTS:
     void sslErrors(QNetworkReply *reply,const QList<QSslError> &errors);
 
 protected:
-    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData = 0 );
+    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData = nullptr);
     QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData);
 
     //! creates the absolute path from m_rootPath and relPath

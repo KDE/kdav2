@@ -60,7 +60,7 @@ QWebdav::QWebdav (QObject *parent) : QNetworkAccessManager(parent)
   ,m_password()
   ,m_baseUrl()
   ,m_currentConnectionType(QWebdav::HTTP)
-  ,m_authenticator_lastReply(0)
+  ,m_authenticator_lastReply(nullptr)
 
 {
     qRegisterMetaType<QNetworkReply*>("QNetworkReply*");
@@ -159,8 +159,8 @@ void QWebdav::replyReadyRead()
     if (reply->bytesAvailable() < 256000)
         return;
 
-    QIODevice* dataIO = m_inDataDevices.value(reply, 0);
-    if(dataIO == 0)
+    QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
+    if(!dataIO)
         return;
     dataIO->write(reply->readAll());
 }
@@ -172,8 +172,8 @@ void QWebdav::replyFinished(QNetworkReply* reply)
     disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
     disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
 
-    QIODevice* dataIO = m_inDataDevices.value(reply, 0);
-    if (dataIO != 0) {
+    QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
+    if (dataIO) {
         dataIO->write(reply->readAll());
         static_cast<QFile*>(dataIO)->flush();
         dataIO->close();
@@ -188,8 +188,8 @@ void QWebdav::replyDeleteLater(QNetworkReply* reply)
 {
     qCDebug(KDAV2_LOG) << "QWebdav::replyDeleteLater()";
 
-    QIODevice *outDataDevice = m_outDataDevices.value(reply, 0);
-    if (outDataDevice!=0)
+    QIODevice *outDataDevice = m_outDataDevices.value(reply, nullptr);
+    if (outDataDevice)
         outDataDevice->deleteLater();
     m_outDataDevices.remove(reply);
 }
@@ -197,14 +197,14 @@ void QWebdav::replyDeleteLater(QNetworkReply* reply)
 void QWebdav::replyError(QNetworkReply::NetworkError)
 {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    if (reply==0)
+    if (!reply)
         return;
 
     qCWarning(KDAV2_LOG) << "QWebdav::replyError()  reply->url() == " << reply->url().toString(QUrl::RemoveUserInfo);
 
     if ( reply->error() == QNetworkReply::OperationCanceledError) {
-        QIODevice* dataIO = m_inDataDevices.value(reply, 0);
-        if (dataIO!=0) {
+        QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
+        if (dataIO) {
             delete dataIO;
             m_inDataDevices.remove(reply);
         }
@@ -229,7 +229,7 @@ void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authent
     authenticator->setPassword(m_password);
 }
 
-void QWebdav::sslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
+void QWebdav::sslErrors(QNetworkReply *reply, const QList<QSslError> &)
 {
     qCDebug(KDAV2_LOG) << "QWebdav::sslErrors()   reply->url == " << reply->url().toString(QUrl::RemoveUserInfo);
 
@@ -247,7 +247,7 @@ QString QWebdav::absolutePath(const QString &relPath)
 
 QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData)
 {
-    if(outgoingData != 0 && outgoingData->size() !=0) {
+    if(outgoingData && outgoingData->size() !=0) {
         req.setHeader(QNetworkRequest::ContentLengthHeader, outgoingData->size());
         req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml; charset=utf-8");
     }
