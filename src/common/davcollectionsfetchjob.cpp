@@ -143,8 +143,6 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
         _jobUrl.setUserInfo(QString());
         const QString jobUrl = _jobUrl.toDisplayString();
 
-        qCDebug(KDAV2_LOG).noquote() << davJob->response().toString();
-
         // Validate that we got a valid PROPFIND response
         QDomElement rootElement = davJob->response().documentElement();
         if (rootElement.localName().compare(QStringLiteral("multistatus"), Qt::CaseInsensitive) != 0) {
