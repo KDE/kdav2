@@ -181,18 +181,6 @@ void QWebdav::replyFinished(QNetworkReply* reply)
         delete dataIO;
     }
     m_inDataDevices.remove(reply);
-
-    QMetaObject::invokeMethod(this,"replyDeleteLater", Qt::QueuedConnection, Q_ARG(QNetworkReply*, reply));
-}
-
-void QWebdav::replyDeleteLater(QNetworkReply* reply)
-{
-    qCDebug(KDAV2_LOG) << "QWebdav::replyDeleteLater()";
-
-    QIODevice *outDataDevice = m_outDataDevices.value(reply, nullptr);
-    if (outDataDevice)
-        outDataDevice->deleteLater();
-    m_outDataDevices.remove(reply);
 }
 
 void QWebdav::replyError(QNetworkReply::NetworkError)
@@ -246,10 +234,10 @@ QString QWebdav::absolutePath(const QString &relPath)
 
 }
 
-QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData)
+QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData)
 {
-    if(outgoingData && outgoingData->size() !=0) {
-        req.setHeader(QNetworkRequest::ContentLengthHeader, outgoingData->size());
+    if(!outgoingData.isEmpty()) {
+        req.setHeader(QNetworkRequest::ContentLengthHeader, outgoingData.size());
         req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml; charset=utf-8");
     }
 
@@ -261,24 +249,12 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
         qCDebug(KDAV2_LOG) << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
     }
 
-    return sendCustomRequest(req, method.toLatin1(), outgoingData);
-}
-
-QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData )
-{
-    QBuffer* dataIO = new QBuffer;
-    dataIO->setData(outgoingData);
-    dataIO->open(QIODevice::ReadOnly);
-
-    QNetworkReply* reply = createDAVRequest(method, req, dataIO);
-
     if (KDAV2_LOG().isDebugEnabled()) {
         QTextStream stream(stdout, QIODevice::WriteOnly);
         stream << outgoingData;
     }
 
-    m_outDataDevices.insert(reply, dataIO);
-    return reply;
+    return sendCustomRequest(req, method.toLatin1(), outgoingData);
 }
 
 QNetworkReply* QWebdav::list(const QString& path)

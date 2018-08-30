@@ -123,20 +123,17 @@ Q_SIGNALS:
 protected Q_SLOTS:
     void replyReadyRead();
     void replyFinished(QNetworkReply*);
-    void replyDeleteLater(QNetworkReply*);
     void replyError(QNetworkReply::NetworkError);
     void provideAuthenication(QNetworkReply* reply, QAuthenticator* authenticator);
     void sslErrors(QNetworkReply *reply,const QList<QSslError> &errors);
 
 protected:
-    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, QIODevice* outgoingData = nullptr);
-    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData);
+    QNetworkReply* createDAVRequest(const QString& method, QNetworkRequest& req, const QByteArray& outgoingData = {});
 
     //! creates the absolute path from m_rootPath and relPath
     QString absolutePath(const QString &relPath);
 
 private:
-    QMap<QNetworkReply*, QIODevice*> m_outDataDevices;
     QMap<QNetworkReply*, QIODevice*> m_inDataDevices;
 
     QString m_rootPath;
