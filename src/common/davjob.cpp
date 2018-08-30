@@ -21,6 +21,8 @@
 #include "daverror.h"
 #include "libkdav2_debug.h"
 
+#include <QTextStream>
+
 using namespace KDAV2;
 
 class DavJobPrivate {
@@ -70,6 +72,12 @@ DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
     });
     QObject::connect(reply, &QNetworkReply::finished, [=] () {
         d->doc.setContent(d->data, true);
+
+        if (KDAV2_LOG().isDebugEnabled()) {
+            QTextStream stream(stdout, QIODevice::WriteOnly);
+            d->doc.save(stream, 2);
+        }
+
         d->responseCode = reply->error();
         if (reply->error()) {
             setError(KJob::UserDefinedError);

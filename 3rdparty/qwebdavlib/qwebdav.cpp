@@ -51,6 +51,7 @@
 #include "qwebdav.h"
 
 #include <QDebug>
+#include <QTextStream>
 
 Q_LOGGING_CATEGORY(KDAV2_LOG, "org.kde.pim.kdav2.webdav")
 
@@ -270,6 +271,12 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
     dataIO->open(QIODevice::ReadOnly);
 
     QNetworkReply* reply = createDAVRequest(method, req, dataIO);
+
+    if (KDAV2_LOG().isDebugEnabled()) {
+        QTextStream stream(stdout, QIODevice::WriteOnly);
+        stream << outgoingData;
+    }
+
     m_outDataDevices.insert(reply, dataIO);
     return reply;
 }
