@@ -65,7 +65,6 @@ static QUrl assembleUrl(QUrl existingUrl, const QString &location)
 
 void DavItemCreateJob::davJobFinished(KJob *job)
 {
-    qWarning() << "Create job finished";
     auto *storedJob = qobject_cast<DavJob*>(job);
     const int responseCode = storedJob->responseCode();
 
