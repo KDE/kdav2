@@ -39,7 +39,7 @@ void DavCollectionFetchJob::start()
     XMLQueryBuilder::Ptr builder(protocol->collectionsQuery());
 
     auto job = DavManager::self()->createPropFindJob(
-        mCollection.url().url(), builder->buildQuery(), /* depth = */ 0);
+        mCollection.url().url(), builder->buildQuery(), /* depth = */ QStringLiteral{"0"});
     connect(job, &DavJob::result, this, &DavCollectionFetchJob::davJobFinished);
 }
 
