@@ -19,6 +19,8 @@
 
 #include "davcollectionfetchjob.h"
 
+#include <QString>
+
 #include "daverror.h"
 #include "davjob.h"
 #include "davmanager.h"
