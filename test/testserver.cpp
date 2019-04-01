@@ -43,40 +43,45 @@ int main(int argc, char **argv)
 
     auto *job = new KDAV2::DavCollectionsFetchJob(davUrl);
     job->exec();
+    if (job->error()) {
+        qWarning() << "DavCollectionsFetchJob failed " << job->errorString();
+    } else {
+        qInfo() << "DavCollectionsFetchJob succeeded";
+    }
 
     for(const auto collection : job->collections()) {
-        qDebug() << collection.displayName() << "PRIVS: " << collection.privileges();
+        qInfo() << collection.displayName() << "PRIVS: " << collection.privileges();
         auto collectionUrl = collection.url();
         int anz = -1;
         {
             auto itemListJob = new KDAV2::DavItemsListJob(collectionUrl);
             itemListJob->exec();
             anz = itemListJob->items().size();
-            qDebug() << "items:" << itemListJob->items().size();
+            qInfo() << "items:" << itemListJob->items().size();
             for (const auto &item : itemListJob->items()) {
-                qDebug() << item.url().url() << item.contentType() << item.data();
+                qInfo() << item.url().url() << item.contentType() << item.data();
                 auto itemFetchJob = new KDAV2::DavItemFetchJob(item);
                 itemFetchJob->exec();
                 const auto fetchedItem = itemFetchJob->item();
-                qDebug() << fetchedItem.contentType() << fetchedItem.data();
+                qInfo() << fetchedItem.contentType() << fetchedItem.data();
 
                 auto itemsFetchJob = new KDAV2::DavItemsFetchJob(collectionUrl, QStringList() << item.url().toDisplayString());
                 itemsFetchJob->exec();
                 if (itemsFetchJob->item(item.url().toDisplayString()).contentType() != fetchedItem.contentType()) {       //itemsfetchjob do not get contentType
-                    qDebug() << "Fetched same item but got different contentType:" << itemsFetchJob->item(item.url().toDisplayString()).contentType();
+                    qInfo() << "Fetched same item but got different contentType:" << itemsFetchJob->item(item.url().toDisplayString()).contentType();
                 }
 
                 if (itemsFetchJob->item(item.url().toDisplayString()).data() != fetchedItem.data()) {
-                    qDebug() << "Fetched same item but got different data:" << itemsFetchJob->item(item.url().toDisplayString()).data();
+                    qInfo() << "Fetched same item but got different data:" << itemsFetchJob->item(item.url().toDisplayString()).data();
                 }
             }
         }
         {
-            qDebug() << "second run: (should be empty).";
+            qInfo() << "second run: (should be empty).";
             auto itemListJob = new KDAV2::DavItemsListJob(collectionUrl);
             itemListJob->exec();
             if (itemListJob->items().size() != anz) {
-                qDebug() << "Items have added/deleted on server.";
+                qInfo() << "Items have added/deleted on server.";
             }
         }
     }
@@ -88,7 +93,7 @@ int main(int argc, char **argv)
         auto collectionDeleteJob = new KDAV2::DavCollectionDeleteJob(collectionUrl);
         collectionDeleteJob->exec();
         if (collectionDeleteJob->error()) {
-            qDebug() << collectionDeleteJob->errorString();
+            qWarning() << "Delete job failed: " << collectionDeleteJob->errorString();
         }
     }
 
@@ -100,7 +105,7 @@ int main(int argc, char **argv)
         collectionModifyJob->setProperty(QStringLiteral("displayname"), QStringLiteral("test234"));
         collectionModifyJob->exec();
         if (collectionModifyJob->error()) {
-            qDebug() << collectionModifyJob->errorString();
+            qWarning() << "Modify job failed:" << collectionModifyJob->errorString();
         }
     }
 
@@ -114,10 +119,10 @@ int main(int argc, char **argv)
         auto createJob = new KDAV2::DavItemCreateJob(item);
         createJob->exec();
         if (createJob->error()) {
-            qDebug() << createJob->errorString();
+            qWarning() << "Create job failed: " << createJob->errorString();
         }
         if (createJob->item().url().toDisplayString() != QStringLiteral("https://apps.kolabnow.com/addressbooks/test1%40kolab.org/9290e784-c876-412f-8385-be292d64b2c6/12345678-1234-1234-1234-123456789abc.vcf")) {
-            qDebug() << "unexpected url" << createJob->item().url().url();
+            qWarning() << "unexpected url" << createJob->item().url().url();
         }
     }
 
@@ -130,7 +135,7 @@ int main(int argc, char **argv)
         auto modifyJob = new KDAV2::DavItemModifyJob(item);
         modifyJob->exec();
         if (modifyJob->error()) {
-            qDebug() << modifyJob->errorString();
+            qWarning() << "Modify job failed " << modifyJob->errorString();
         }
     }
 
@@ -143,7 +148,7 @@ int main(int argc, char **argv)
         auto deleteJob = new KDAV2::DavItemDeleteJob(item);
         deleteJob->exec();
         if (deleteJob->error()) {
-            qDebug() << deleteJob->errorString();
+            qWarning() << "Delete job failed " << deleteJob->errorString();
         }
     }
 }
