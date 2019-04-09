@@ -155,8 +155,7 @@ void QWebdav::setConnectionSettings(const QWebdavConnectionType connectionType,
 
 void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authenticator)
 {
-    QVariantHash opts = authenticator->options();
-    qCDebug(KDAV2_LOG) << "QWebdav::authenticationRequired()  option == " << opts;
+    qCDebug(KDAV2_LOG) << "QWebdav::authenticationRequired()  option == " << authenticator->options();
 
     if (reply == m_authenticator_lastReply) {
         //Avoid endless retries. This will fail with AuthenticationRequiredError
@@ -205,12 +204,6 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
     }
 
     return sendCustomRequest(req, method.toLatin1(), outgoingData);
-}
-
-QNetworkReply* QWebdav::list(const QString& path)
-{
-    qCDebug(KDAV2_LOG) << "QWebdav::list() path = " << path;
-    return list(path, 1);
 }
 
 QNetworkReply* QWebdav::list(const QString& path, int depth)
@@ -280,20 +273,6 @@ QNetworkReply* QWebdav::get(const QString& path, const QMap<QByteArray, QByteArr
     req.setUrl(reqUrl);
 
     return QNetworkAccessManager::get(req);
-}
-
-QNetworkReply* QWebdav::put(const QString& path, QIODevice* data)
-{
-    QNetworkRequest req;
-
-    QUrl reqUrl(m_baseUrl);
-    reqUrl.setPath(absolutePath(path));
-
-    req.setUrl(reqUrl);
-
-    qCDebug(KDAV2_LOG) << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
-
-    return QNetworkAccessManager::put(req, data);
 }
 
 QNetworkReply* QWebdav::put(const QString& path, const QByteArray& data, const QMap<QByteArray, QByteArray> &headers)

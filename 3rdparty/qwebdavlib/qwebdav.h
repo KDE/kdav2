@@ -89,14 +89,12 @@ public:
                             int port = 0,
                             bool ignoreSslErrors = true);
 
-    QNetworkReply* list(const QString& path);
-    QNetworkReply* list(const QString& path, int depth);
+    QNetworkReply* list(const QString& path, int depth = 1);
 
     QNetworkReply* search(const QString& path, const QString& query);
 
     QNetworkReply* get(const QString& path, const QMap<QByteArray, QByteArray> &headers);
 
-    QNetworkReply* put(const QString& path, QIODevice* data);
     QNetworkReply* put(const QString& path, const QByteArray& data, const QMap<QByteArray, QByteArray> &headers);
 
     QNetworkReply* mkdir(const QString& dir );
