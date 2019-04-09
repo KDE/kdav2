@@ -95,8 +95,6 @@ public:
     QNetworkReply* search(const QString& path, const QString& query);
 
     QNetworkReply* get(const QString& path, const QMap<QByteArray, QByteArray> &headers);
-    QNetworkReply* get(const QString& path, QIODevice* data);
-    QNetworkReply* get(const QString& path, QIODevice* data, quint64 fromRangeInBytes);
 
     QNetworkReply* put(const QString& path, QIODevice* data);
     QNetworkReply* put(const QString& path, const QByteArray& data, const QMap<QByteArray, QByteArray> &headers);
@@ -117,13 +115,7 @@ public:
     QNetworkReply* proppatch(const QString& path, const QWebdav::PropValues& props);
     QNetworkReply* proppatch(const QString& path, const QByteArray& query);
 
-Q_SIGNALS:
-    void errorChanged(QString error);
-
 protected Q_SLOTS:
-    void replyReadyRead();
-    void replyFinished(QNetworkReply*);
-    void replyError(QNetworkReply::NetworkError);
     void provideAuthenication(QNetworkReply* reply, QAuthenticator* authenticator);
     void sslErrors(QNetworkReply *reply,const QList<QSslError> &errors);
 
@@ -134,8 +126,6 @@ protected:
     QString absolutePath(const QString &relPath);
 
 private:
-    QMap<QNetworkReply*, QIODevice*> m_inDataDevices;
-
     QString m_rootPath;
     QString m_username;
     QString m_password;

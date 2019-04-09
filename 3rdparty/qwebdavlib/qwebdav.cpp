@@ -66,7 +66,6 @@ QWebdav::QWebdav (QObject *parent) : QNetworkAccessManager(parent)
 {
     qRegisterMetaType<QNetworkReply*>("QNetworkReply*");
 
-    connect(this, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
     connect(this, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(provideAuthenication(QNetworkReply*,QAuthenticator*)));
     connect(this, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrors(QNetworkReply*,QList<QSslError>)));
 }
@@ -152,55 +151,6 @@ void QWebdav::setConnectionSettings(const QWebdavConnectionType connectionType,
 
     m_username = username;
     m_password = password;
-}
-
-void QWebdav::replyReadyRead()
-{
-    QNetworkReply* reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    if (reply->bytesAvailable() < 256000)
-        return;
-
-    QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
-    if(!dataIO)
-        return;
-    dataIO->write(reply->readAll());
-}
-
-void QWebdav::replyFinished(QNetworkReply* reply)
-{
-    qCDebug(KDAV2_LOG) << "QWebdav::replyFinished() " << reply->rawHeaderList();
-
-    disconnect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-    disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
-
-    QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
-    if (dataIO) {
-        dataIO->write(reply->readAll());
-        static_cast<QFile*>(dataIO)->flush();
-        dataIO->close();
-        delete dataIO;
-    }
-    m_inDataDevices.remove(reply);
-}
-
-void QWebdav::replyError(QNetworkReply::NetworkError)
-{
-    QNetworkReply* reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    if (!reply)
-        return;
-
-    qCWarning(KDAV2_LOG) << "QWebdav::replyError()  reply->url() == " << reply->url().toString(QUrl::RemoveUserInfo);
-
-    if ( reply->error() == QNetworkReply::OperationCanceledError) {
-        QIODevice* dataIO = m_inDataDevices.value(reply, nullptr);
-        if (dataIO) {
-            delete dataIO;
-            m_inDataDevices.remove(reply);
-        }
-        return;
-    }
-
-    emit errorChanged(reply->errorString());
 }
 
 void QWebdav::provideAuthenication(QNetworkReply *reply, QAuthenticator *authenticator)
@@ -330,36 +280,6 @@ QNetworkReply* QWebdav::get(const QString& path, const QMap<QByteArray, QByteArr
     req.setUrl(reqUrl);
 
     return QNetworkAccessManager::get(req);
-}
-
-QNetworkReply* QWebdav::get(const QString& path, QIODevice* data)
-{
-    return get(path, data, 0);
-}
-
-QNetworkReply* QWebdav::get(const QString& path, QIODevice* data, quint64 fromRangeInBytes)
-{
-    QNetworkRequest req;
-
-    QUrl reqUrl(m_baseUrl);
-    reqUrl.setPath(absolutePath(path));
-
-    req.setUrl(reqUrl);
-
-    qCDebug(KDAV2_LOG) << "QWebdav::get() url = " << req.url().toString(QUrl::RemoveUserInfo);
-
-    if (fromRangeInBytes>0) {
-        // RFC2616 http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
-        QByteArray fromRange = "bytes=" + QByteArray::number(fromRangeInBytes) + "-";   // byte-ranges-specifier
-        req.setRawHeader("Range",fromRange);
-    }
-
-    QNetworkReply* reply = QNetworkAccessManager::get(req);
-    m_inDataDevices.insert(reply, data);
-    connect(reply, SIGNAL(readyRead()), this, SLOT(replyReadyRead()));
-    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(replyError(QNetworkReply::NetworkError)));
-
-    return reply;
 }
 
 QNetworkReply* QWebdav::put(const QString& path, QIODevice* data)

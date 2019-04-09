@@ -34,12 +34,9 @@ using namespace KDAV2;
 DavManager *DavManager::mSelf = nullptr;
 
 DavManager::DavManager()
-    : mIgnoreSslErrors(true)
+    : mWebDav{new QWebdav},
+    mIgnoreSslErrors{true}
 {
-    mWebDav = new QWebdav;
-    QObject::connect(mWebDav, &QWebdav::errorChanged, [=] (const QString &error) {
-        qWarning() << "Got error " << error;
-    });
 }
 
 DavManager::~DavManager()
