@@ -93,19 +93,6 @@ DavJob::~DavJob()
 
 void DavJob::start()
 {
-    // KIO::DavJob *job = DavManager::self()->createPropFindJob(url, collectionQuery);
-
-    // KIO::DavJob *job = KIO::davPropFind(url, document, depth, KIO::HideProgressInfo | KIO::DefaultFlags);
-
-    // // workaround needed, Depth: header doesn't seem to be correctly added
-    // const QString header = QLatin1String("Content-Type: text/xml\r\nDepth: ") + depth;
-    // job->addMetaData(QStringLiteral("customHTTPHeader"), header);
-    // job->addMetaData(QStringLiteral("cookies"), QStringLiteral("none"));
-    // job->addMetaData(QStringLiteral("no-auth-prompt"), QStringLiteral("true"));
-    // job->setProperty("extraDavDepth", QVariant::fromValue(depth));
-
-    // connect(job, &KIO::DavJob::result, this, &DavCollectionsFetchJob::collectionsFetchFinished);
-    // job->addMetaData(QStringLiteral("PropagateHttpHeader"), QStringLiteral("true"));
 }
 
 QDomDocument DavJob::response()
