@@ -63,7 +63,6 @@ private Q_SLOTS:
 
 private:
     DavItem mItem;
-    int mRedirectCount;
 };
 
 }

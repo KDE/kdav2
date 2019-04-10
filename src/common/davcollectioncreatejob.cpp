@@ -65,45 +65,12 @@ QUrl DavCollectionCreateJob::collectionUrl() const
     return mCollection.url().url();
 }
 
-static QUrl assembleUrl(QUrl existingUrl, const QString &location)
-{
-    if (location.isEmpty()) {
-        return existingUrl;
-    } else if (location.startsWith(QLatin1Char('/'))) {
-        auto url = existingUrl;
-        url.setPath(location, QUrl::TolerantMode);
-        return url;
-    } else {
-        return QUrl::fromUserInput(location);
-    }
-    return {};
-}
-
 void DavCollectionCreateJob::collectionCreated(KJob *job)
 {
-    auto *storedJob        = qobject_cast<DavJob *>(job);
-    const int responseCode = storedJob->responseCode();
-
-    if (responseCode == 301 || responseCode == 302 || responseCode == 307 || responseCode == 308) {
-        if (mRedirectCount > 4) {
-            setLatestResponseCode(responseCode);
-            setError(UserDefinedError + responseCode);
-            emitResult();
-        } else {
-            auto url = assembleUrl(storedJob->url(), storedJob->getLocationHeader());
-            QUrl _collectionUrl(url);
-            _collectionUrl.setUserInfo(collectionUrl().userInfo());
-            mCollection.setUrl(DavUrl(_collectionUrl, mCollection.url().protocol()));
-
-            ++mRedirectCount;
-            start();
-        }
-
-        return;
-    }
+    auto storedJob = static_cast<DavJob*>(job);
 
     if (storedJob->error()) {
-        setLatestResponseCode(responseCode);
+        setLatestResponseCode(storedJob->responseCode());
         setError(ERR_COLLECTIONCREATE);
         setJobErrorText(storedJob->errorText());
         setJobError(storedJob->error());
@@ -113,11 +80,8 @@ void DavCollectionCreateJob::collectionCreated(KJob *job)
         return;
     }
 
-    auto url = assembleUrl(storedJob->url(), storedJob->getLocationHeader());
-    url.setUserInfo(collectionUrl().userInfo());
-
     DavCollectionModifyJob *modifyJob =
-        new DavCollectionModifyJob(DavUrl(url, mCollection.url().protocol()), this);
+        new DavCollectionModifyJob(DavUrl(storedJob->url(), mCollection.url().protocol()), this);
 
     modifyJob->setProperty(QStringLiteral("displayname"), mCollection.displayName());
 

@@ -28,7 +28,7 @@
 using namespace KDAV2;
 
 DavItemCreateJob::DavItemCreateJob(const DavItem &item, QObject *parent)
-    : DavJobBase(parent), mItem(item), mRedirectCount(0)
+    : DavJobBase(parent), mItem(item)
 {
 }
 
@@ -48,58 +48,21 @@ QUrl DavItemCreateJob::itemUrl() const
     return mItem.url().url();
 }
 
-
-static QUrl assembleUrl(QUrl existingUrl, const QString &location)
-{
-    if (location.isEmpty()) {
-        return existingUrl;
-    } else if (location.startsWith(QLatin1Char('/'))) {
-        auto url = existingUrl;
-        url.setPath(location, QUrl::TolerantMode);
-        return url;
-    } else {
-        return QUrl::fromUserInput(location);
-    }
-    return {};
-}
-
 void DavItemCreateJob::davJobFinished(KJob *job)
 {
-    auto *storedJob = qobject_cast<DavJob*>(job);
-    const int responseCode = storedJob->responseCode();
-
-    if (responseCode == 301 || responseCode == 302 || responseCode == 307 || responseCode == 308) {
-        if (mRedirectCount > 4) {
-            setLatestResponseCode(responseCode);
-            setError(UserDefinedError + responseCode);
-            emitResult();
-        } else {
-            auto url = assembleUrl(storedJob->url(), storedJob->getLocationHeader());
-            QUrl _itemUrl(url);
-            _itemUrl.setUserInfo(itemUrl().userInfo());
-            mItem.setUrl(DavUrl(_itemUrl, mItem.url().protocol()));
-
-            ++mRedirectCount;
-            start();
-        }
-
-        return;
-    }
+    auto storedJob = static_cast<DavJob*>(job);
 
     if (storedJob->error()) {
-        setLatestResponseCode(responseCode);
+        setLatestResponseCode(storedJob->responseCode());
         setError(ERR_ITEMCREATE);
         setJobErrorText(storedJob->errorText());
         setJobError(storedJob->error());
         setErrorTextFromDavError();
-
         emitResult();
         return;
     }
 
-    auto url = assembleUrl(storedJob->url(), storedJob->getLocationHeader());
-    url.setUserInfo(itemUrl().userInfo());
-    mItem.setUrl(DavUrl(url, mItem.url().protocol()));
+    mItem.setUrl(DavUrl(storedJob->url(), mItem.url().protocol()));
 
     DavItemFetchJob *fetchJob = new DavItemFetchJob(mItem);
     connect(fetchJob, &DavItemFetchJob::result, this, &DavItemCreateJob::itemRefreshed);
