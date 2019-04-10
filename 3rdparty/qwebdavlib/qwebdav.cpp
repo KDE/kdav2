@@ -203,7 +203,10 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
         stream << outgoingData;
     }
 
-    return sendCustomRequest(req, method.toLatin1(), outgoingData);
+    auto reply = sendCustomRequest(req, method.toLatin1(), outgoingData);
+    //For redirects
+    reply->setProperty("requestData", outgoingData);
+    return reply;
 }
 
 QNetworkReply* QWebdav::list(const QString& path, int depth)
@@ -289,7 +292,10 @@ QNetworkReply* QWebdav::put(const QString& path, const QByteArray& data, const Q
 
     qCDebug(KDAV2_LOG) << "QWebdav::put() url = " << req.url().toString(QUrl::RemoveUserInfo);
 
-    return QNetworkAccessManager::put(req, data);
+    auto reply =  QNetworkAccessManager::put(req, data);
+    reply->setProperty("requestData", data);
+    reply->setProperty("isPut", true);
+    return reply;
 }
 
 

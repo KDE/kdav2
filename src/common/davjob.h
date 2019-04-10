@@ -50,7 +50,6 @@ class KPIMKDAV2_EXPORT DavJob : public KJob
 
 public:
     DavJob();
-    explicit DavJob(KIO::DavJob *job, QObject *parent = nullptr);
     explicit DavJob(QNetworkReply *reply, QUrl url, QObject *parent = nullptr);
     ~DavJob();
 
@@ -67,6 +66,7 @@ public:
     QString getContentTypeHeader();
 
 private:
+    void connectToReply(QNetworkReply *reply);
     std::unique_ptr<DavJobPrivate> d;
 };
 

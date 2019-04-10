@@ -56,6 +56,7 @@ public:
      * Returns the found home sets.
      */
     QStringList homeSets() const;
+    QUrl url() const;
 
 private Q_SLOTS:
     void davJobFinished(KJob *);

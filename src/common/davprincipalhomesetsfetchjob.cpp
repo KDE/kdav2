@@ -64,13 +64,16 @@ QStringList DavPrincipalHomeSetsFetchJob::homeSets() const
     return mHomeSets;
 }
 
+QUrl DavPrincipalHomeSetsFetchJob::url() const
+{
+    return mUrl.url();
+}
 void DavPrincipalHomeSetsFetchJob::davJobFinished(KJob *job)
 {
     DavJob *davJob = qobject_cast<DavJob *>(job);
-    const int responseCode = davJob->responseCode();
 
     if (davJob->error()) {
-        setLatestResponseCode(responseCode);
+        setLatestResponseCode(davJob->responseCode());
         setError(ERR_PROBLEM_WITH_REQUEST);
         setJobErrorText(davJob->errorText());
         setJobError(davJob->error());
@@ -122,6 +125,7 @@ void DavPrincipalHomeSetsFetchJob::davJobFinished(KJob *job)
      *  </multistatus>
      */
 
+    mUrl.setUrl(davJob->url());
     const QString homeSet = DavManager::self()->davProtocol(mUrl.protocol())->principalHomeSet();
     const QString homeSetNS = DavManager::self()->davProtocol(mUrl.protocol())->principalHomeSetNS();
     QString nextRoundHref; // The content of the href element that will be used if no homeset was found.

@@ -93,6 +93,9 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
     qCDebug(KDAV2_LOG) << "Found " << homeSets.size() << " homesets";
     qCDebug(KDAV2_LOG) << homeSets;
 
+    //Update the url in case of redirects
+    mUrl.setUrl(davJob->url());
+
     if (homeSets.isEmpty()) {
         // Same as above, retry as if it were a calendar URL.
         doCollectionsFetch(mUrl.url());

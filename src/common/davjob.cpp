@@ -18,7 +18,7 @@
 
 #include "davjob.h"
 
-#include "daverror.h"
+#include "davmanager.h"
 #include "libkdav2_debug.h"
 
 #include <QTextStream>
@@ -54,23 +54,57 @@ DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
     d(std::unique_ptr<DavJobPrivate>(new DavJobPrivate()))
 {
     d->url = url;
-    QObject::connect(reply, &QNetworkReply::readyRead, [=] () {
+    connectToReply(reply);
+}
+
+DavJob::~DavJob()
+{
+}
+
+void DavJob::connectToReply(QNetworkReply *reply)
+{
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [=] () {
         d->data.append(reply->readAll());
     });
-    QObject::connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), [=] (QNetworkReply::NetworkError error) {
-        qCWarning(KDAV2_LOG) << "Error " << error << reply->errorString();
+    QObject::connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), this, [=] (QNetworkReply::NetworkError error) {
+        qCWarning(KDAV2_LOG) << "Error " << error << reply->errorString() << "HTTP Status code " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qCWarning(KDAV2_LOG) << "Error " << reply->readAll();
     });
-    QObject::connect(reply, &QNetworkReply::redirected, [=] (const QUrl &url) {
-        qCWarning(KDAV2_LOG) << "Redirected: " << url;
-    });
-    QObject::connect(reply, &QNetworkReply::metaDataChanged, [=] () {
+    QObject::connect(reply, &QNetworkReply::metaDataChanged, this, [=] () {
         qCDebug(KDAV2_LOG) << "Metadata changed: " << reply->rawHeaderPairs();
         d->location = reply->rawHeader("Location");
         d->etag = reply->rawHeader("ETag");
         //"text/x-vcard; charset=utf-8" -> "text/x-vcard"
         d->contentType = reply->rawHeader("Content-Type").split(';').first();
     });
-    QObject::connect(reply, &QNetworkReply::finished, [=] () {
+    QObject::connect(reply, &QNetworkReply::finished, this, [=] () {
+        //This is a workaround for QNetworkAccessManager::setRedirectPolicy(QNetworkRequest::UserVerifiedRedirectPolicy),
+        //which does not seem to work with multiple redirects.
+        const auto possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+        if(!possibleRedirectUrl.isEmpty()) {
+            qCDebug(KDAV2_LOG) << "Redirecting to " << possibleRedirectUrl;
+            auto request = reply->request();
+            request.setUrl(possibleRedirectUrl);
+            reply->disconnect(this);
+
+            //Set in QWebdav
+            const auto requestData = reply->property("requestData").toByteArray();
+            d->data.clear();
+
+            auto redirectReply = [&] {
+                if (reply->property("isPut").toBool()) {
+                    return DavManager::networkAccessManager()->put(request, requestData);
+                }
+                return DavManager::networkAccessManager()->sendCustomRequest(request, request.attribute(QNetworkRequest::CustomVerbAttribute).toByteArray(), requestData);
+            }();
+            redirectReply->setProperty("requestData", requestData);
+            connectToReply(redirectReply);
+            return;
+        }
+
+        //Could have changed due to redirects
+        d->url = reply->url();
+
         d->doc.setContent(d->data, true);
 
         if (KDAV2_LOG().isDebugEnabled()) {
@@ -79,16 +113,13 @@ DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
         }
 
         d->responseCode = reply->error();
-        if (reply->error()) {
+        if (d->responseCode) {
             setError(KJob::UserDefinedError);
             setErrorText(reply->errorString());
         }
         emitResult();
     });
-}
 
-DavJob::~DavJob()
-{
 }
 
 void DavJob::start()
