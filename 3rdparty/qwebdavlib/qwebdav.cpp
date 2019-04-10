@@ -190,11 +190,9 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
         req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml; charset=utf-8");
     }
 
-    qCDebug(KDAV2_LOG) << " QWebdav::createDAVRequest";
-    qCDebug(KDAV2_LOG) << "   " << method << " " << req.url().toString();
-    QList<QByteArray> rawHeaderList = req.rawHeaderList();
-    QByteArray rawHeaderItem;
-    foreach(rawHeaderItem, rawHeaderList) {
+    qCDebug(KDAV2_LOG) << " QWebdav::createDAVRequest\n"
+        << "   " << method << " " << req.url().toString();
+    for (const auto rawHeaderItem : req.rawHeaderList()) {
         qCDebug(KDAV2_LOG) << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
     }
 

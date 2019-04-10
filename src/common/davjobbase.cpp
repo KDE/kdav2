@@ -54,43 +54,30 @@ unsigned int DavJobBase::latestResponseCode() const
 
 bool DavJobBase::canRetryLater() const
 {
-    bool ret = false;
-
-    // Be explicit and readable by splitting the if/else if clauses
-
-    if (latestResponseCode() == 0 && error()) {
-        // Likely a timeout or a connection failure.
-        ret = true;
-    } else if (latestResponseCode() == 401) {
-        // Authentication required
-        ret = true;
-    } else if (latestResponseCode() == 402) {
-        // Payment required
-        ret = true;
-    } else if (latestResponseCode() == 407) {
-        // Proxy authentication required
-        ret = true;
-    } else if (latestResponseCode() == 408) {
-        // Request timeout
-        ret = true;
-    } else if (latestResponseCode() == 423) {
-        // Locked
-        ret = true;
-    } else if (latestResponseCode() == 429) {
-        // Too many requests
-        ret = true;
-    } else if (latestResponseCode() >= 501 && latestResponseCode() <= 504) {
-        // Various server-side errors
-        ret = true;
-    } else if (latestResponseCode() == 507) {
-        // Insufficient storage
-        ret = true;
-    } else if (latestResponseCode() == 511) {
-        // Network authentication required
-        ret = true;
+    switch (latestResponseCode()) {
+        case 0:
+            // Likely a timeout or a connection failure.
+            if (error()) {
+                return true;
+            }
+            break;
+        case 401: // Authentication required
+        case 402: // Payment required
+        case 407: // Proxy authentication required
+        case 408: // Request timeout
+        case 423: // Locked
+        case 429: // Too many requests
+        case 501:
+        case 502:
+        case 503:
+        case 504:
+        case 507: // Insufficient storage
+        case 511: // Network authentication required
+            return true;
+        default:
+            break;
     }
-
-    return ret;
+    return false;
 }
 
 bool DavJobBase::hasConflict() const

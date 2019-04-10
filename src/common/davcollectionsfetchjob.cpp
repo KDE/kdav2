@@ -90,8 +90,7 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
     }
 
     const QStringList homeSets = davJob->homeSets();
-    qCDebug(KDAV2_LOG) << "Found " << homeSets.size() << " homesets";
-    qCDebug(KDAV2_LOG) << homeSets;
+    qCDebug(KDAV2_LOG) << "Found " << homeSets.size() << " homesets\n " << homeSets;
 
     //Update the url in case of redirects
     mUrl.setUrl(davJob->url());
@@ -122,8 +121,7 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
 
 void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
 {
-    auto davJob = qobject_cast<DavJob *>(job);
-    const int responseCode = davJob->responseCode();
+    auto davJob = static_cast<DavJob *>(job);
 
     if (davJob->error()) {
         if (davJob->url() != mUrl.url()) {
@@ -135,7 +133,7 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
             return;
         }
 
-        setLatestResponseCode(responseCode);
+        setLatestResponseCode(davJob->responseCode());
         setError(ERR_PROBLEM_WITH_REQUEST);
         setJobErrorText(davJob->errorText());
         setJobError(davJob->error());

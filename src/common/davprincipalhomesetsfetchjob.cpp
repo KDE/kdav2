@@ -137,19 +137,18 @@ void DavPrincipalHomeSetsFetchJob::davJobFinished(KJob *job)
     QDomElement responseElement = Utils::firstChildElementNS(multistatusElement, QStringLiteral("DAV:"), QStringLiteral("response"));
     while (!responseElement.isNull()) {
 
-        QDomElement propstatElement;
-
-        // check for the valid propstat, without giving up on first error
-        {
+        const QDomElement propstatElement = [&] {
+            // check for the valid propstat, without giving up on first error
             const QDomNodeList propstats = responseElement.elementsByTagNameNS(QStringLiteral("DAV:"), QStringLiteral("propstat"));
             for (int i = 0; i < propstats.length(); ++i) {
                 const QDomElement propstatCandidate = propstats.item(i).toElement();
                 const QDomElement statusElement = Utils::firstChildElementNS(propstatCandidate, QStringLiteral("DAV:"), QStringLiteral("status"));
                 if (statusElement.text().contains(QLatin1String("200"))) {
-                    propstatElement = propstatCandidate;
+                    return propstatCandidate;
                 }
             }
-        }
+            return QDomElement{};
+        }();
 
         if (propstatElement.isNull()) {
             responseElement = Utils::nextSiblingElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("response"));

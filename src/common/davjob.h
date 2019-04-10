@@ -30,40 +30,25 @@
 
 class DavJobPrivate;
 
-namespace KIO {
-    class DavJob;
-}
-
 namespace KDAV2
 {
-class Error;
-
-    /* API
-     * queryMetaData(QString) -> QString
-     * KJob::error
-     * url
-     * QDomDocument &response();
-     */
 class KPIMKDAV2_EXPORT DavJob : public KJob
 {
     Q_OBJECT
 
 public:
-    DavJob();
     explicit DavJob(QNetworkReply *reply, QUrl url, QObject *parent = nullptr);
     ~DavJob();
 
     virtual void start() Q_DECL_OVERRIDE;
 
-    QDomDocument response();
-    QByteArray data();
-    QUrl url();
-
-    int responseCode();
-
-    QString getLocationHeader();
-    QString getETagHeader();
-    QString getContentTypeHeader();
+    QDomDocument response() const;
+    QByteArray data() const;
+    QUrl url() const;
+    int responseCode() const;
+    QString getLocationHeader() const;
+    QString getETagHeader() const;
+    QString getContentTypeHeader() const;
 
 private:
     void connectToReply(QNetworkReply *reply);

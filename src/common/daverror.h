@@ -30,7 +30,7 @@ namespace KDAV2
 
 enum ErrorNumber {
    NO_ERR = 0,
-   ERR_PROBLEM_WITH_REQUEST = KJob::UserDefinedError + 200,         //it would be better to request KIO about uts UserDefinedError space.
+   ERR_PROBLEM_WITH_REQUEST = KJob::UserDefinedError + 200,
    ERR_NO_MULTIGET,
    ERR_SERVER_UNRECOVERABLE,
    ERR_COLLECTIONDELETE = ERR_PROBLEM_WITH_REQUEST + 10,

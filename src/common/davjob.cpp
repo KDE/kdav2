@@ -27,8 +27,6 @@ using namespace KDAV2;
 
 class DavJobPrivate {
 public:
-    DavJobPrivate();
-
     QByteArray data;
     QDomDocument doc;
     QUrl url;
@@ -39,19 +37,9 @@ public:
     int responseCode = 0;
 };
 
-DavJobPrivate::DavJobPrivate()
-{
-}
-
-DavJob::DavJob()
-    : KJob()
-    , d(std::unique_ptr<DavJobPrivate>(new DavJobPrivate()))
-{
-}
-
 DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
     : KJob(parent),
-    d(std::unique_ptr<DavJobPrivate>(new DavJobPrivate()))
+    d(new DavJobPrivate)
 {
     d->url = url;
     connectToReply(reply);
@@ -126,37 +114,37 @@ void DavJob::start()
 {
 }
 
-QDomDocument DavJob::response()
+QDomDocument DavJob::response() const
 {
     return d->doc;
 }
 
-QByteArray DavJob::data()
+QByteArray DavJob::data() const
 {
     return d->data;
 }
 
-QUrl DavJob::url()
+QUrl DavJob::url() const
 {
     return d->url;
 }
 
-QString DavJob::getLocationHeader()
+QString DavJob::getLocationHeader() const
 {
     return d->location;
 }
 
-QString DavJob::getETagHeader()
+QString DavJob::getETagHeader() const
 {
     return d->etag;
 }
 
-QString DavJob::getContentTypeHeader()
+QString DavJob::getContentTypeHeader() const
 {
     return d->contentType;
 }
 
-int DavJob::responseCode()
+int DavJob::responseCode() const
 {
     return d->responseCode;
 }
