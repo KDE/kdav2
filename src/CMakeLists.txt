@@ -14,6 +14,7 @@ set(libkdav2_SRCS
  common/davcollectionsfetchjob.cpp
  common/davcollectionmodifyjob.cpp
  common/davcollectionsmultifetchjob.cpp
+ common/davdiscoveryjob.cpp
  common/davprotocolbase.cpp
  common/daverror.cpp
  common/davitem.cpp
@@ -47,6 +48,7 @@ ecm_generate_headers(KDAV2_Camelcase_HEADERS
     DavCollectionsFetchJob
     DavCollectionModifyJob
     DavCollectionsMultiFetchJob
+    DavDiscoveryJob
     DavError
     DavItem
     DavItemCreateJob
