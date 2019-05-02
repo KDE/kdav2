@@ -34,7 +34,8 @@ public:
     QString location;
     QString etag;
     QString contentType;
-    int responseCode = 0;
+    QNetworkReply::NetworkError responseCode = QNetworkReply::NoError;
+    int httpStatusCode = 0;
 };
 
 DavJob::DavJob(QNetworkReply *reply, QUrl url, QObject *parent)
@@ -101,6 +102,7 @@ void DavJob::connectToReply(QNetworkReply *reply)
         }
 
         d->responseCode = reply->error();
+        d->httpStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (d->responseCode) {
             setError(KJob::UserDefinedError);
             setErrorText(reply->errorString());
@@ -144,7 +146,12 @@ QString DavJob::getContentTypeHeader() const
     return d->contentType;
 }
 
-int DavJob::responseCode() const
+QNetworkReply::NetworkError DavJob::responseCode() const
 {
     return d->responseCode;
+}
+
+int DavJob::httpStatusCode() const
+{
+    return d->httpStatusCode;
 }

@@ -45,7 +45,8 @@ public:
     QDomDocument response() const;
     QByteArray data() const;
     QUrl url() const;
-    int responseCode() const;
+    QNetworkReply::NetworkError responseCode() const;
+    int httpStatusCode() const;
     QString getLocationHeader() const;
     QString getETagHeader() const;
     QString getContentTypeHeader() const;

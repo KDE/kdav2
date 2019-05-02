@@ -20,16 +20,16 @@
 #define KDAV2_DAVJOBBASE_H
 
 #include <memory>
-
 #include "kpimkdav2_export.h"
+#include <KJob>
+#include "daverror.h"
 
-#include <KCoreAddons/KJob>
-
-class DavJobBasePrivate;
+struct DavJobBasePrivate;
 
 namespace KDAV2
 {
 class Error;
+class DavJob;
 
 /**
  * @short base class for the jobs used by the resource.
@@ -43,11 +43,23 @@ public:
     ~DavJobBase();
 
     /**
-     * Get the latest response code.
+     * Get the latest http status code.
      *
      * If no response code has been set then 0 will be returned, but will
      * be meaningless unless error() is non-zero. In that case this means
      * that the latest error was not at the HTTP level.
+     */
+    unsigned int latestHttpStatusCode() const;
+
+    /**
+     * Get the response code.
+     *
+     * This is a QNetworkReply::NetworkError
+     *
+     * If no response code has been set then 0 will be returned, but will
+     * be meaningless unless error() is non-zero. In that case this means
+     * that the latest error was not at the HTTP level.
+     *
      */
     unsigned int latestResponseCode() const;
 
@@ -90,12 +102,13 @@ protected:
      *
      * @param code The code to set, should be a valid HTTP response code or zero.
      */
-    void setLatestResponseCode(unsigned int code);
+    void setLatestHttpStatusCode(unsigned int code);
 
     void setJobErrorText(const QString &errorText);
     void setJobError(unsigned int jobErrorCode);
     void setErrorTextFromDavError();
     void setDavError(const Error &error);
+    void setErrorFromJob(DavJob*, unsigned int jobErrorCode = ERR_PROBLEM_WITH_REQUEST);
 private:
     std::unique_ptr<DavJobBasePrivate> d;
 };

@@ -60,23 +60,18 @@ QUrl DavDiscoveryJob::url() const
 
 void DavDiscoveryJob::davJobFinished(KJob *job)
 {
-    DavJob *davJob = qobject_cast<DavJob *>(job);
+    DavJob *davJob = static_cast<DavJob*>(job);
 
     if (davJob->error()) {
         //Retry on the root uri on 404, otherwise fail
-        if (davJob->responseCode() == 404 && davJob->url().path() != QStringLiteral("/")) {
+        if (davJob->httpStatusCode() == 404 && davJob->url().path() != QStringLiteral("/")) {
             auto url = mUrl.url();
             url.setPath("/");
             mUrl.setUrl(url);
             start();
             return;
         }
-        setLatestResponseCode(davJob->responseCode());
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
-
+        setErrorFromJob(davJob);
         emitResult();
         return;
     }

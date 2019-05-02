@@ -70,12 +70,7 @@ void DavCollectionCreateJob::collectionCreated(KJob *job)
     auto storedJob = static_cast<DavJob*>(job);
 
     if (storedJob->error()) {
-        setLatestResponseCode(storedJob->responseCode());
-        setError(ERR_COLLECTIONCREATE);
-        setJobErrorText(storedJob->errorText());
-        setJobError(storedJob->error());
-        setErrorTextFromDavError();
-
+        setErrorFromJob(storedJob, ERR_COLLECTIONCREATE);
         emitResult();
         return;
     }

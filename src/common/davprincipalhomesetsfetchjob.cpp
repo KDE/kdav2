@@ -70,15 +70,9 @@ QUrl DavPrincipalHomeSetsFetchJob::url() const
 }
 void DavPrincipalHomeSetsFetchJob::davJobFinished(KJob *job)
 {
-    DavJob *davJob = qobject_cast<DavJob *>(job);
-
+    auto davJob = static_cast<DavJob*>(job);
     if (davJob->error()) {
-        setLatestResponseCode(davJob->responseCode());
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
-
+        setErrorFromJob(davJob);
         emitResult();
         return;
     }

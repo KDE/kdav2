@@ -41,13 +41,7 @@ void DavCollectionDeleteJob::davJobFinished(KJob *job)
 
     //TODO Ignore deleteJob->error() != KIO::ERR_NO_CONTENT
     if (deleteJob->error()) {
-        const int responseCode = deleteJob->responseCode();
-
-        setLatestResponseCode(responseCode);
-        setError(ERR_COLLECTIONDELETE);
-        setJobErrorText(deleteJob->errorText());
-        setJobError(deleteJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(deleteJob, ERR_COLLECTIONDELETE);
     }
 
     emitResult();

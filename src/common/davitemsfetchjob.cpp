@@ -72,16 +72,9 @@ DavItem DavItemsFetchJob::item(const QString &url) const
 
 void DavItemsFetchJob::davJobFinished(KJob *job)
 {
-    DavJob *davJob = qobject_cast<DavJob *>(job);
-    const int responseCode = davJob->responseCode();
-
+    auto davJob = static_cast<DavJob *>(job);
     if (davJob->error()) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
-
+        setErrorFromJob(davJob);
         emitResult();
         return;
     }

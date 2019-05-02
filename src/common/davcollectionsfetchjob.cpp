@@ -74,7 +74,7 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
     const DavPrincipalHomeSetsFetchJob *davJob = qobject_cast<DavPrincipalHomeSetsFetchJob *>(job);
 
     if (davJob->error()) {
-        if (davJob->latestResponseCode()) {
+        if (davJob->latestHttpStatusCode()) {
             // If we have a HTTP response code then this may mean that
             // the URL was not a principal URL. Retry as if it were a calendar URL.
             qCDebug(KDAV2_LOG) << "Principal fetch failed, retrying: " << job->errorText();
@@ -82,7 +82,6 @@ void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
         } else {
             // Just give up here.
             setDavError(davJob->davError());
-            setErrorTextFromDavError();
             emitResult();
         }
 
@@ -133,11 +132,7 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
             return;
         }
 
-        setLatestResponseCode(davJob->responseCode());
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(davJob);
     } else {
         // For use in the collectionDiscovered() signal
         QUrl _jobUrl = mUrl.url();
@@ -288,14 +283,13 @@ void DavCollectionsFetchJob::individualCollectionRefreshed(KJob *job)
     const auto *davJob = qobject_cast<DavCollectionFetchJob *>(job);
 
     if (davJob->error()) {
-        if (davJob->latestResponseCode()) {
+        if (davJob->latestHttpStatusCode()) {
             // If we have a HTTP response code then this may mean that
             // the URL was not a principal URL. Retry as if it were a calendar URL.
             qCDebug(KDAV2_LOG) << "Individual fetch failed, retrying: " << job->errorText();
             doCollectionsFetch(mUrl.url());
         } else {
             setDavError(davJob->davError());
-            setErrorTextFromDavError();
             emitResult();
         }
         return;

@@ -18,24 +18,16 @@
 
 #include "davjobbase.h"
 
-#include "daverror.h"
+#include "davjob.h"
 
 using namespace KDAV2;
 
-class DavJobBasePrivate {
-public:
-    DavJobBasePrivate();
-
-    int mLatestResponseCode;
-    int mJobErrorCode;
+struct DavJobBasePrivate {
+    int mLatestHttpStatusCode{0};
+    int mLatestResponseCode{0};
+    int mJobErrorCode{0};
     QString mInternalErrorText;
 };
-
-DavJobBasePrivate::DavJobBasePrivate()
-    : mLatestResponseCode(0)
-    , mJobErrorCode(0)
-{
-}
 
 DavJobBase::DavJobBase(QObject *parent)
     : KJob(parent)
@@ -47,6 +39,11 @@ DavJobBase::~DavJobBase()
 {
 }
 
+unsigned int DavJobBase::latestHttpStatusCode() const
+{
+    return d->mLatestHttpStatusCode;
+}
+
 unsigned int DavJobBase::latestResponseCode() const
 {
     return d->mLatestResponseCode;
@@ -54,7 +51,7 @@ unsigned int DavJobBase::latestResponseCode() const
 
 bool DavJobBase::canRetryLater() const
 {
-    switch (latestResponseCode()) {
+    switch (latestHttpStatusCode()) {
         case 0:
             // Likely a timeout or a connection failure.
             if (error()) {
@@ -82,17 +79,17 @@ bool DavJobBase::canRetryLater() const
 
 bool DavJobBase::hasConflict() const
 {
-    return latestResponseCode() == 412;
+    return latestHttpStatusCode() == 412;
 }
 
-void DavJobBase::setLatestResponseCode(unsigned int code)
+void DavJobBase::setLatestHttpStatusCode(unsigned int code)
 {
-    d->mLatestResponseCode = code;
+    d->mLatestHttpStatusCode = code;
 }
 
 Error DavJobBase::davError() const
 {
-    return Error((KDAV2::ErrorNumber)error(), d->mLatestResponseCode, d->mInternalErrorText, d->mJobErrorCode);
+    return Error((KDAV2::ErrorNumber)error(), d->mLatestHttpStatusCode, d->mLatestResponseCode, d->mInternalErrorText, d->mJobErrorCode);
 }
 
 void DavJobBase::setJobErrorText(const QString &errorText)
@@ -113,7 +110,17 @@ void DavJobBase::setErrorTextFromDavError()
 void DavJobBase::setDavError(const Error &error)
 {
     setError(error.errorNumber());
-    setLatestResponseCode(error.responseCode());
+    setLatestHttpStatusCode(error.responseCode());
     setJobErrorText(error.internalErrorText());
     setJobError(error.jobErrorCode());
+    setErrorText(error.errorText());
+}
+
+void DavJobBase::setErrorFromJob(DavJob *job, unsigned int jobErrorCode)
+{
+    setLatestHttpStatusCode(job->httpStatusCode());
+    d->mLatestResponseCode = job->responseCode();
+    setError(jobErrorCode);
+    setJobErrorText(job->errorText());
+    setJobError(job->error());
 }

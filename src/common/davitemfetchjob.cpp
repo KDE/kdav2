@@ -42,16 +42,9 @@ DavItem DavItemFetchJob::item() const
 
 void DavItemFetchJob::davJobFinished(KJob *job)
 {
-    auto *storedJob = qobject_cast<DavJob*>(job);
-    const int responseCode = storedJob->responseCode();
-    setLatestResponseCode(responseCode);
-
+    auto *storedJob = static_cast<DavJob*>(job);
     if (storedJob->error()) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(storedJob->errorText());
-        setJobError(storedJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(storedJob);
     } else {
         mItem.setData(storedJob->data());
         mItem.setContentType(storedJob->getContentTypeHeader());

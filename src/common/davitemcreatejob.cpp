@@ -53,11 +53,7 @@ void DavItemCreateJob::davJobFinished(KJob *job)
     auto storedJob = static_cast<DavJob*>(job);
 
     if (storedJob->error()) {
-        setLatestResponseCode(storedJob->responseCode());
-        setError(ERR_ITEMCREATE);
-        setJobErrorText(storedJob->errorText());
-        setJobError(storedJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(storedJob, ERR_ITEMCREATE);
         emitResult();
         return;
     }

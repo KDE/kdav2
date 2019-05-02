@@ -48,17 +48,12 @@ int DavItemDeleteJob::freshResponseCode() const
 
 void DavItemDeleteJob::davJobFinished(KJob *job)
 {
-    auto *deleteJob = qobject_cast<DavJob *>(job);
+    auto deleteJob = static_cast<DavJob *>(job);
 
     if (deleteJob->error()) {
-        const int responseCode = deleteJob->responseCode();
-
+        const int responseCode = deleteJob->httpStatusCode();
         if (responseCode != 404 && responseCode != 410) {
-            setLatestResponseCode(responseCode);
-            setError(ERR_ITEMDELETE);
-            setJobErrorText(deleteJob->errorText());
-            setJobError(deleteJob->error());
-            setErrorTextFromDavError();
+            setErrorFromJob(deleteJob, ERR_ITEMDELETE);
         }
 
         if (hasConflict()) {
@@ -75,7 +70,7 @@ void DavItemDeleteJob::davJobFinished(KJob *job)
 void DavItemDeleteJob::conflictingItemFetched(KJob *job)
 {
     DavItemFetchJob *fetchJob = qobject_cast<DavItemFetchJob *>(job);
-    mFreshResponseCode = fetchJob->latestResponseCode();
+    mFreshResponseCode = fetchJob->latestHttpStatusCode();
 
     if (!job->error()) {
         mFreshItem = fetchJob->item();

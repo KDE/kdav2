@@ -62,7 +62,7 @@ public:
     DavItem freshItem() const;
 
     /**
-     * Returns the response code we got when fetching the fresh item.
+     * Returns the http response code we got when fetching the fresh item.
      */
     int freshResponseCode() const;
 

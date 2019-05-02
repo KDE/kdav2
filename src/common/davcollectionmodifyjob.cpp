@@ -102,15 +102,9 @@ void DavCollectionModifyJob::start()
 
 void DavCollectionModifyJob::davJobFinished(KJob *job)
 {
-    DavJob *davJob = qobject_cast<DavJob *>(job);
-    const int responseCode = davJob->responseCode();
-
+    auto davJob = static_cast<DavJob*>(job);
     if (davJob->error()) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_COLLECTIONMODIFY);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(davJob, ERR_COLLECTIONMODIFY);
         emitResult();
         return;
     }
@@ -145,7 +139,6 @@ void DavCollectionModifyJob::davJobFinished(KJob *job)
         if (!responseDescriptionElement.isNull()) {
             setJobErrorText(responseDescriptionElement.text());
         }
-        setErrorTextFromDavError();
     }
 
     emitResult();

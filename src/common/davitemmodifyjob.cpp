@@ -58,16 +58,10 @@ QUrl DavItemModifyJob::itemUrl() const
 
 void DavItemModifyJob::davJobFinished(KJob *job)
 {
-    auto *storedJob = qobject_cast<DavJob*>(job);
+    auto storedJob = static_cast<DavJob*>(job);
 
     if (storedJob->error()) {
-        const int responseCode = storedJob->responseCode();;
-
-        setLatestResponseCode(responseCode);
-        setError(ERR_ITEMMODIFY);
-        setJobErrorText(storedJob->errorText());
-        setJobError(storedJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(storedJob, ERR_ITEMMODIFY);
 
         if (hasConflict()) {
             DavItemFetchJob *fetchJob = new DavItemFetchJob(mItem);
@@ -113,7 +107,7 @@ void DavItemModifyJob::itemRefreshed(KJob *job)
 void DavItemModifyJob::conflictingItemFetched(KJob *job)
 {
     DavItemFetchJob *fetchJob = qobject_cast<DavItemFetchJob *>(job);
-    mFreshResponseCode = fetchJob->latestResponseCode();
+    mFreshResponseCode = fetchJob->latestHttpStatusCode();
 
     if (!job->error()) {
         mFreshItem = fetchJob->item();

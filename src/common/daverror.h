@@ -51,17 +51,18 @@ enum ErrorNumber {
 class KPIMKDAV2_EXPORT Error {
 public:
     explicit Error();
-    explicit Error(ErrorNumber errNo, int responseCode, const QString &errorText, int jobErrorCode);
+    explicit Error(ErrorNumber errNo, int httpStatusCode, int responseCode, const QString &errorText, int jobErrorCode);
 
     ErrorNumber errorNumber() const;
+    int httpStatusCode() const;
     int responseCode() const;
     QString internalErrorText() const;
     int jobErrorCode() const;
-    QString translatedJobError() const;
     QString errorText() const;
 
 private:
     ErrorNumber mErrorNumber;
+    int mHttpStatusCode;
     int mResponseCode;
     QString mErrorText;
     int mJobErrorCode;

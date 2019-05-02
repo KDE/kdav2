@@ -80,14 +80,8 @@ void DavPrincipalSearchJob::start()
 void DavPrincipalSearchJob::principalCollectionSetSearchFinished(KJob *job)
 {
     DavJob *davJob = qobject_cast<DavJob *>(job);
-    const int responseCode = davJob->responseCode();
-
     if (davJob->error()) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(davJob);
 
         emitResult();
         return;
@@ -198,28 +192,19 @@ void DavPrincipalSearchJob::principalPropertySearchFinished(KJob *job)
         return;
     }
 
-    DavJob *davJob = qobject_cast<DavJob *>(job);
+    DavJob *davJob = static_cast<DavJob *>(job);
 
-    const int responseCode = davJob->responseCode();
+    const int responseCode = davJob->httpStatusCode();
 
     if (responseCode > 499 && responseCode < 600 && !mPrincipalPropertySearchSubJobSuccessful) {
         // Server-side error, unrecoverable
-        setLatestResponseCode(responseCode);
-        setError(ERR_SERVER_UNRECOVERABLE);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(davJob, ERR_SERVER_UNRECOVERABLE);
         if (mPrincipalPropertySearchSubJobCount == 0) {
             emitResult();
         }
         return;
     } else if (responseCode > 399 && responseCode < 500 && !mPrincipalPropertySearchSubJobSuccessful) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(davJob->errorText());
-        setJobError(davJob->error());
-        setErrorTextFromDavError();
-
+        setErrorFromJob(davJob);
         if (mPrincipalPropertySearchSubJobCount == 0) {
             emitResult();
         }

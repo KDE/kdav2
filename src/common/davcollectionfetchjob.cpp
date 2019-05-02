@@ -52,15 +52,9 @@ DavCollection DavCollectionFetchJob::collection() const
 
 void DavCollectionFetchJob::davJobFinished(KJob *job)
 {
-    auto *storedJob        = qobject_cast<DavJob *>(job);
-    const int responseCode = storedJob->responseCode();
-
+    auto storedJob = static_cast<DavJob*>(job);
     if (storedJob->error()) {
-        setLatestResponseCode(responseCode);
-        setError(ERR_PROBLEM_WITH_REQUEST);
-        setJobErrorText(storedJob->errorText());
-        setJobError(storedJob->error());
-        setErrorTextFromDavError();
+        setErrorFromJob(storedJob);
     } else {
         /*
          * Extract data from a document like the following:
