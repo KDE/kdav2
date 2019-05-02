@@ -18,6 +18,7 @@
 
 #include "davdiscoveryjob.h"
 
+#include "libkdav2_debug.h"
 #include "davmanager.h"
 #include "davprotocolbase.h"
 #include "daverror.h"
@@ -68,6 +69,7 @@ void DavDiscoveryJob::davJobFinished(KJob *job)
             auto url = mUrl.url();
             url.setPath("/");
             mUrl.setUrl(url);
+            qCDebug(KDAV2_LOG) << "Retrying on root url" << url;
             start();
             return;
         }
