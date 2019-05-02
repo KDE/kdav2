@@ -91,17 +91,12 @@ void DavItemsListJob::start()
 
         if (d->mMimeTypes.isEmpty() || d->mMimeTypes.contains(mimeType)) {
             ++d->mSubJobCount;
-            if (protocol->useReport()) {
-                DavJob *job = DavManager::self()->createReportJob(d->mUrl.url(), props);
-                job->setProperty("davType", QStringLiteral("report"));
-                job->setProperty("itemsMimeType", mimeType);
-                connect(job, &DavJob::result, this, &DavItemsListJob::davJobFinished);
-            } else {
-                DavJob *job = DavManager::self()->createPropFindJob(d->mUrl.url(), props);
-                job->setProperty("davType", QStringLiteral("propFind"));
-                job->setProperty("itemsMimeType", mimeType);
-                connect(job, &DavJob::result, this, &DavItemsListJob::davJobFinished);
-            }
+            const auto url = d->mUrl.url();
+            auto job = protocol->useReport() ?
+                DavManager::self()->createReportJob(url, props) :
+                DavManager::self()->createPropFindJob(url, props);
+            job->setProperty("itemsMimeType", mimeType);
+            connect(job, &DavJob::result, this, &DavItemsListJob::davJobFinished);
         }
     }
 
