@@ -58,7 +58,7 @@ void DavCollectionCreateJobTest::runAddressbookTest()
     KDAV2::DavCollection resultCollection = collectionCreateJob->collection();
 
     QVERIFY(!resultCollection.CTag().isEmpty());
-    QCOMPARE(resultCollection.displayName(), {"Test AddressBook Collection"});
+    QCOMPARE(resultCollection.displayName(), QLatin1String("Test AddressBook Collection"));
 
     delete collectionCreateJob;
 }
@@ -81,8 +81,8 @@ void DavCollectionCreateJobTest::runCalendarTest()
     KDAV2::DavCollection resultCollection = collectionCreateJob->collection();
 
     QVERIFY(!resultCollection.CTag().isEmpty());
-    QCOMPARE(resultCollection.displayName(), {"Test Calendar Collection"});
-    QCOMPARE(resultCollection.color().name(), {"#123456"});
+    QCOMPARE(resultCollection.displayName(), QLatin1String("Test Calendar Collection"));
+    QCOMPARE(resultCollection.color().name(), QLatin1String("#123456"));
     QVERIFY(resultCollection.contentTypes().testFlag(KDAV2::DavCollection::Events));
     QVERIFY(resultCollection.contentTypes().testFlag(KDAV2::DavCollection::Todos));
 

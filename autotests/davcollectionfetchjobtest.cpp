@@ -42,7 +42,7 @@ void DavCollectionFetchJobTest::runAddressbookTest()
     KDAV2::DavCollection resultCollection = collectionFetchJob->collection();
 
     QVERIFY(!resultCollection.CTag().isEmpty());
-    QCOMPARE(resultCollection.displayName(), {"Contacts"});
+    QCOMPARE(resultCollection.displayName(), QLatin1String("Contacts"));
 }
 
 void DavCollectionFetchJobTest::runCalendarTest()
@@ -64,8 +64,8 @@ void DavCollectionFetchJobTest::runCalendarTest()
     KDAV2::DavCollection resultCollection = collectionFetchJob->collection();
 
     QVERIFY(!resultCollection.CTag().isEmpty());
-    QCOMPARE(resultCollection.displayName(), {"Calendar"});
-    QCOMPARE(resultCollection.color().name(), {"#cc0000"});
+    QCOMPARE(resultCollection.displayName(), QLatin1String("Calendar"));
+    QCOMPARE(resultCollection.color().name(), QLatin1String("#cc0000"));
 }
 
 QTEST_GUILESS_MAIN(DavCollectionFetchJobTest)
