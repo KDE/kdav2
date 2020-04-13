@@ -56,8 +56,7 @@ void DavJob::connectToReply(QNetworkReply *reply)
         d->data.append(reply->readAll());
     });
     QObject::connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), this, [=] (QNetworkReply::NetworkError error) {
-        qCWarning(KDAV2_LOG) << "Error " << error << reply->errorString() << "HTTP Status code " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        qCWarning(KDAV2_LOG) << "Error " << reply->readAll();
+        qCWarning(KDAV2_LOG) << "Network error:" << error << "Message:" << reply->errorString() << "HTTP Status code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() << "\nAvailable data:" << reply->readAll();
     });
     QObject::connect(reply, &QNetworkReply::metaDataChanged, this, [=] () {
         qCDebug(KDAV2_LOG) << "Metadata changed: " << reply->rawHeaderPairs();
@@ -104,6 +103,11 @@ void DavJob::connectToReply(QNetworkReply *reply)
         d->responseCode = reply->error();
         d->httpStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (d->responseCode) {
+            setError(KJob::UserDefinedError);
+            setErrorText(reply->errorString());
+        } else if (d->httpStatusCode >= 400) {
+            qWarning() << "No error set even though we clearly have an http error?" << d->responseCode << d->httpStatusCode;
+            Q_ASSERT(false);
             setError(KJob::UserDefinedError);
             setErrorText(reply->errorString());
         }
