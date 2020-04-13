@@ -72,18 +72,10 @@ void DavCollectionsFetchJob::doCollectionsFetch(const QUrl &url)
 void DavCollectionsFetchJob::principalFetchFinished(KJob *job)
 {
     const DavPrincipalHomeSetsFetchJob *davJob = qobject_cast<DavPrincipalHomeSetsFetchJob *>(job);
-
     if (davJob->error()) {
-        if (davJob->latestHttpStatusCode()) {
-            // If we have a HTTP response code then this may mean that
-            // the URL was not a principal URL. Retry as if it were a calendar URL.
-            qCDebug(KDAV2_LOG) << "Principal fetch failed, retrying: " << job->errorText();
-            doCollectionsFetch(mUrl.url());
-        } else {
-            // Just give up here.
-            setDavError(davJob->davError());
-            emitResult();
-        }
+        // Just give up here.
+        setDavError(davJob->davError());
+        emitResult();
 
         return;
     }
@@ -123,15 +115,6 @@ void DavCollectionsFetchJob::collectionsFetchFinished(KJob *job)
     auto davJob = static_cast<DavJob *>(job);
 
     if (davJob->error()) {
-        if (davJob->url() != mUrl.url()) {
-            // Retry as if the initial URL was a calendar URL.
-            // We can end up here when retrieving a homeset on
-            // which a PROPFIND resulted in an error
-            doCollectionsFetch(mUrl.url());
-            --mSubJobCount;
-            return;
-        }
-
         setErrorFromJob(davJob);
     } else {
         // For use in the collectionDiscovered() signal
@@ -283,15 +266,8 @@ void DavCollectionsFetchJob::individualCollectionRefreshed(KJob *job)
     const auto *davJob = qobject_cast<DavCollectionFetchJob *>(job);
 
     if (davJob->error()) {
-        if (davJob->latestHttpStatusCode()) {
-            // If we have a HTTP response code then this may mean that
-            // the URL was not a principal URL. Retry as if it were a calendar URL.
-            qCDebug(KDAV2_LOG) << "Individual fetch failed, retrying: " << job->errorText();
-            doCollectionsFetch(mUrl.url());
-        } else {
-            setDavError(davJob->davError());
-            emitResult();
-        }
+        setDavError(davJob->davError());
+        emitResult();
         return;
     }
 
