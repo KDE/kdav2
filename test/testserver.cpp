@@ -49,7 +49,7 @@ int main(int argc, char **argv)
         qInfo() << "DavCollectionsFetchJob succeeded";
     }
 
-    for(const auto collection : job->collections()) {
+    for(const auto &collection : job->collections()) {
         qInfo() << collection.displayName() << "PRIVS: " << collection.privileges();
         auto collectionUrl = collection.url();
         int anz = -1;
