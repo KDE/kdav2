@@ -108,7 +108,7 @@ protected:
     void setJobError(unsigned int jobErrorCode);
     void setErrorTextFromDavError();
     void setDavError(const Error &error);
-    void setErrorFromJob(DavJob*, unsigned int jobErrorCode = ERR_PROBLEM_WITH_REQUEST);
+    void setErrorFromJob(DavJob*, ErrorNumber jobErrorCode = ERR_PROBLEM_WITH_REQUEST);
 private:
     std::unique_ptr<DavJobBasePrivate> d;
 };

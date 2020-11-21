@@ -117,11 +117,7 @@ void DavJobBase::setDavError(const Error &error)
     setErrorText(error.errorText());
 }
 
-void DavJobBase::setErrorFromJob(DavJob *job, unsigned int jobErrorCode)
+void DavJobBase::setErrorFromJob(DavJob *job, ErrorNumber jobErrorCode)
 {
-    setLatestHttpStatusCode(job->httpStatusCode());
-    d->mLatestResponseCode = job->responseCode();
-    setError(jobErrorCode);
-    setJobErrorText(job->errorText());
-    setJobError(job->error());
+    setDavError(Error{jobErrorCode, job->httpStatusCode(), job->responseCode(), job->errorText(), job->error()});
 }
