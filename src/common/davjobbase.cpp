@@ -109,8 +109,9 @@ void DavJobBase::setErrorTextFromDavError()
 
 void DavJobBase::setDavError(const Error &error)
 {
+    setLatestHttpStatusCode(error.httpStatusCode());
+    d->mLatestResponseCode = error.responseCode();
     setError(error.errorNumber());
-    setLatestHttpStatusCode(error.responseCode());
     setJobErrorText(error.internalErrorText());
     setJobError(error.jobErrorCode());
     setErrorText(error.errorText());
