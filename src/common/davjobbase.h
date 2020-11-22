@@ -94,20 +94,12 @@ public:
     Error davError() const;
 
 protected:
-    /**
-     * Sets the latest response code received.
-     *
-     * Only really useful in case of error, though success codes can
-     * also be set.
-     *
-     * @param code The code to set, should be a valid HTTP response code or zero.
-     */
-    void setLatestHttpStatusCode(unsigned int code);
-
-    void setJobErrorText(const QString &errorText);
-    void setJobError(unsigned int jobErrorCode);
     void setErrorTextFromDavError();
     void setDavError(const Error &error);
+
+    /**
+     * Set the error of this job from a failed DavJob (executed by this job).
+     */
     void setErrorFromJob(DavJob*, ErrorNumber jobErrorCode = ERR_PROBLEM_WITH_REQUEST);
 private:
     std::unique_ptr<DavJobBasePrivate> d;

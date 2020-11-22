@@ -113,7 +113,6 @@ void DavCollectionModifyJob::davJobFinished(KJob *job)
     QDomElement responseElement = Utils::firstChildElementNS(response.documentElement(), QStringLiteral("DAV:"), QStringLiteral("response"));
 
     bool hasError = false;
-    QString errorText;
 
     // parse all propstats answers to get the eventual errors
     const QDomNodeList propstats = responseElement.elementsByTagNameNS(QStringLiteral("DAV:"), QStringLiteral("propstat"));
@@ -132,13 +131,14 @@ void DavCollectionModifyJob::davJobFinished(KJob *job)
     }
 
     if (hasError) {
-        setError(ERR_COLLECTIONMODIFY_RESPONSE);
 
+        QString description;
         // Trying to get more information about the error
         const QDomElement responseDescriptionElement = Utils::firstChildElementNS(responseElement, QStringLiteral("DAV:"), QStringLiteral("responsedescription"));
         if (!responseDescriptionElement.isNull()) {
-            setJobErrorText(responseDescriptionElement.text());
+            description = responseDescriptionElement.text();
         }
+        setDavError(Error{ERR_COLLECTIONMODIFY_RESPONSE, 0, 0, description, 0});
     }
 
     emitResult();

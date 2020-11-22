@@ -23,10 +23,7 @@
 using namespace KDAV2;
 
 struct DavJobBasePrivate {
-    int mLatestHttpStatusCode{0};
-    int mLatestResponseCode{0};
-    int mJobErrorCode{0};
-    QString mInternalErrorText;
+    Error mError;
 };
 
 DavJobBase::DavJobBase(QObject *parent)
@@ -41,12 +38,12 @@ DavJobBase::~DavJobBase()
 
 unsigned int DavJobBase::latestHttpStatusCode() const
 {
-    return d->mLatestHttpStatusCode;
+    return d->mError.httpStatusCode();
 }
 
 unsigned int DavJobBase::latestResponseCode() const
 {
-    return d->mLatestResponseCode;
+    return d->mError.responseCode();
 }
 
 bool DavJobBase::canRetryLater() const
@@ -82,42 +79,24 @@ bool DavJobBase::hasConflict() const
     return latestHttpStatusCode() == 412;
 }
 
-void DavJobBase::setLatestHttpStatusCode(unsigned int code)
-{
-    d->mLatestHttpStatusCode = code;
-}
-
 Error DavJobBase::davError() const
 {
-    return Error((KDAV2::ErrorNumber)error(), d->mLatestHttpStatusCode, d->mLatestResponseCode, d->mInternalErrorText, d->mJobErrorCode);
-}
-
-void DavJobBase::setJobErrorText(const QString &errorText)
-{
-    d->mInternalErrorText = errorText;
-}
-
-void DavJobBase::setJobError(unsigned int jobErrorCode)
-{
-    d->mJobErrorCode = jobErrorCode;
+    return Error((KDAV2::ErrorNumber)error(), d->mError.httpStatusCode(), d->mError.responseCode(), d->mError.errorText(), d->mError.jobErrorCode());
 }
 
 void DavJobBase::setErrorTextFromDavError()
 {
-    setErrorText(davError().errorText());
+    setErrorText(davError().description());
 }
 
 void DavJobBase::setDavError(const Error &error)
 {
-    setLatestHttpStatusCode(error.httpStatusCode());
-    d->mLatestResponseCode = error.responseCode();
+    d->mError = error;
     setError(error.errorNumber());
-    setJobErrorText(error.internalErrorText());
-    setJobError(error.jobErrorCode());
-    setErrorText(error.errorText());
+    setErrorText(error.description());
 }
 
-void DavJobBase::setErrorFromJob(DavJob *job, ErrorNumber jobErrorCode)
+void DavJobBase::setErrorFromJob(DavJob *job, ErrorNumber errNo)
 {
-    setDavError(Error{jobErrorCode, job->httpStatusCode(), job->responseCode(), job->errorText(), job->error()});
+    setDavError(Error{errNo, job->httpStatusCode(), job->responseCode(), job->errorText(), job->error()});
 }

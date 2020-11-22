@@ -53,12 +53,35 @@ public:
     explicit Error();
     explicit Error(ErrorNumber errNo, int httpStatusCode, int responseCode, const QString &errorText, int jobErrorCode);
 
+    /**
+     * Error number
+     */
     ErrorNumber errorNumber() const;
+
+    /**
+     * Latest HTTP status code
+     */
     int httpStatusCode() const;
+
+    /**
+     * Latest QNetworkReply::NetworkError.
+     */
     int responseCode() const;
-    QString internalErrorText() const;
-    int jobErrorCode() const;
+
+    /**
+     * Error text of the subjob that failed.
+     */
     QString errorText() const;
+
+    /**
+     * Error code of the subjob that failed.
+     */
+    int jobErrorCode() const;
+
+    /**
+     * Generate an error description.
+     */
+    QString description() const;
 
 private:
     ErrorNumber mErrorNumber;

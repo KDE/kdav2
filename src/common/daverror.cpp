@@ -28,7 +28,7 @@ Error::Error()
 {
 }
 
-Error::Error(ErrorNumber errNo, int httpStatusCode, int responseCode ,const QString &errorText, int jobErrorCode)
+Error::Error(ErrorNumber errNo, int httpStatusCode, int responseCode, const QString &errorText, int jobErrorCode)
     : mErrorNumber(errNo)
     , mHttpStatusCode(httpStatusCode)
     , mResponseCode(responseCode)
@@ -42,7 +42,7 @@ ErrorNumber Error::errorNumber() const
     return mErrorNumber;
 }
 
-QString Error::internalErrorText() const
+QString Error::errorText() const
 {
     return mErrorText;
 }
@@ -62,7 +62,7 @@ int Error::responseCode() const
     return mResponseCode;
 }
 
-QString Error::errorText() const
+QString Error::description() const
 {
     switch (mErrorNumber) {
         case ERR_PROBLEM_WITH_REQUEST: {
@@ -83,10 +83,10 @@ QString Error::errorText() const
         case ERR_NO_MULTIGET:
             return QStringLiteral("Protocol for the collection does not support MULTIGET");
         case ERR_SERVER_UNRECOVERABLE:
-            return QStringLiteral("The server encountered an error that prevented it from completing your request: %1 (%2)").arg(internalErrorText()).arg(mResponseCode);
+            return QStringLiteral("The server encountered an error that prevented it from completing your request: %1 (%2)").arg(mErrorText).arg(mResponseCode);
         case ERR_COLLECTIONDELETE:
             return QStringLiteral("There was a problem with the request. The collection has not been deleted from the server.\n"
-                            "%1 (%2).").arg(internalErrorText()).arg(mResponseCode);
+                            "%1 (%2).").arg(mErrorText).arg(mResponseCode);
         case ERR_COLLECTIONFETCH:
             return QStringLiteral("Invalid responses from backend");
         case ERR_COLLECTIONFETCH_XQUERY_SETFOCUS:
@@ -95,7 +95,7 @@ QString Error::errorText() const
             return QStringLiteral("Invalid XQuery submitted by DAV implementation");
         case ERR_COLLECTIONMODIFY:
             return QStringLiteral("There was a problem with the request. The collection has not been modified on the server.\n"
-                        "%1 (%2).").arg(internalErrorText()).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
         case ERR_COLLECTIONMODIFY_NO_PROPERITES:
             return QStringLiteral("No properties to change or remove");
         case ERR_COLLECTIONMODIFY_RESPONSE: {
@@ -109,13 +109,13 @@ QString Error::errorText() const
             return QStringLiteral("There was an error when creating the collection");
         case ERR_ITEMCREATE:
             return QStringLiteral("There was a problem with the request. The item has not been created on the server.\n"
-                        "%1 (%2).").arg(internalErrorText()).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
         case ERR_ITEMDELETE:
             return QStringLiteral("There was a problem with the request. The item has not been deleted from the server.\n"
-                        "%1 (%2).").arg(internalErrorText()).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
         case ERR_ITEMMODIFY:
             return QStringLiteral("There was a problem with the request. The item was not modified on the server.\n"
-                        "%1 (%2).").arg(internalErrorText()).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
         case ERR_ITEMLIST:
             return QStringLiteral("There was a problem with the request.");
         case ERR_ITEMLIST_NOMIMETYPE:
@@ -123,5 +123,5 @@ QString Error::errorText() const
         case NO_ERR:
             break;
     }
-    return internalErrorText();
+    return mErrorText;
 }
