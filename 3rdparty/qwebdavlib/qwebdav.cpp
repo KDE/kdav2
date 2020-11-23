@@ -192,7 +192,7 @@ QNetworkReply* QWebdav::createDAVRequest(const QString& method, QNetworkRequest&
 
     qCDebug(KDAV2_LOG) << " QWebdav::createDAVRequest\n"
         << "   " << method << " " << req.url().toString();
-    for (const auto rawHeaderItem : req.rawHeaderList()) {
+    for (const auto &rawHeaderItem : req.rawHeaderList()) {
         qCDebug(KDAV2_LOG) << "   " << rawHeaderItem << ": " << req.rawHeader(rawHeaderItem);
     }
 
