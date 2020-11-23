@@ -68,25 +68,25 @@ QString Error::description() const
         case ERR_PROBLEM_WITH_REQUEST: {
             // User-side error
             QString err;
-            if (mResponseCode == 401) {
+            if (mHttpStatusCode == 401) {
                 err = QStringLiteral("Invalid username/password");
-            } else if (mResponseCode == 403) {
+            } else if (mHttpStatusCode == 403) {
                 err = QStringLiteral("Access forbidden");
-            } else if (mResponseCode == 404) {
+            } else if (mHttpStatusCode == 404) {
                 err = QStringLiteral("Resource not found");
             } else {
                 err = QStringLiteral("HTTP error");
             }
             return QStringLiteral("There was a problem with the request.\n"
-                            "%1 (%2).").arg(err).arg(mResponseCode);
+                            "%1 (%2).").arg(err).arg(mHttpStatusCode);
         }
         case ERR_NO_MULTIGET:
             return QStringLiteral("Protocol for the collection does not support MULTIGET");
         case ERR_SERVER_UNRECOVERABLE:
-            return QStringLiteral("The server encountered an error that prevented it from completing your request: %1 (%2)").arg(mErrorText).arg(mResponseCode);
+            return QStringLiteral("The server encountered an error that prevented it from completing your request: %1 (%2)").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_COLLECTIONDELETE:
             return QStringLiteral("There was a problem with the request. The collection has not been deleted from the server.\n"
-                            "%1 (%2).").arg(mErrorText).arg(mResponseCode);
+                            "%1 (%2).").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_COLLECTIONFETCH:
             return QStringLiteral("Invalid responses from backend");
         case ERR_COLLECTIONFETCH_XQUERY_SETFOCUS:
@@ -95,7 +95,7 @@ QString Error::description() const
             return QStringLiteral("Invalid XQuery submitted by DAV implementation");
         case ERR_COLLECTIONMODIFY:
             return QStringLiteral("There was a problem with the request. The collection has not been modified on the server.\n"
-                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_COLLECTIONMODIFY_NO_PROPERITES:
             return QStringLiteral("No properties to change or remove");
         case ERR_COLLECTIONMODIFY_RESPONSE: {
@@ -109,13 +109,13 @@ QString Error::description() const
             return QStringLiteral("There was an error when creating the collection");
         case ERR_ITEMCREATE:
             return QStringLiteral("There was a problem with the request. The item has not been created on the server.\n"
-                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_ITEMDELETE:
             return QStringLiteral("There was a problem with the request. The item has not been deleted from the server.\n"
-                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_ITEMMODIFY:
             return QStringLiteral("There was a problem with the request. The item was not modified on the server.\n"
-                        "%1 (%2).").arg(mErrorText).arg(mResponseCode);
+                        "%1 (%2).").arg(mErrorText).arg(mHttpStatusCode);
         case ERR_ITEMLIST:
             return QStringLiteral("There was a problem with the request.");
         case ERR_ITEMLIST_NOMIMETYPE:
