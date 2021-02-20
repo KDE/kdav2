@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(libkdav2)
 
-set(LIBKDAV2_VERSION "0.4")
+set(LIBKDAV2_VERSION "0.4.0")
 
 configure_file(libkdav2-version.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/libkdav2-version.h @ONLY)
 
